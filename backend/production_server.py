@@ -234,6 +234,72 @@ def get_score_leaderboard():
             "source": "demo"
         })
 
+@app.route('/api/leaderboard/speed', methods=['GET'])
+def get_speed_leaderboard():
+    """Get speed-based leaderboard (fastest completion times)"""
+    import requests
+    try:
+        response = requests.get(
+            f"{SUPABASE_REST_URL}/leaderboard_entries?category=eq.completion_time&order=completion_time.asc&limit=10",
+            headers=get_supabase_headers()
+        )
+        if response.status_code == 200:
+            leaderboard_data = response.json()
+            enriched_leaderboard = []
+            for i, entry in enumerate(leaderboard_data):
+                entry["rank"] = i + 1
+                user_response = requests.get(
+                    f"{SUPABASE_REST_URL}/users?id=eq.{entry['user_id']}&select=username,full_name",
+                    headers=get_supabase_headers()
+                )
+                if user_response.status_code == 200 and user_response.json():
+                    user_data = user_response.json()[0]
+                    entry.update(user_data)
+                enriched_leaderboard.append(entry)
+            if enriched_leaderboard:
+                return jsonify({
+                    "entries": enriched_leaderboard,
+                    "type": "speed",
+                    "source": "database"
+                })
+        users_response = requests.get(f"{SUPABASE_REST_URL}/users?order=best_completion_time.asc&limit=10", headers=get_supabase_headers())
+        if users_response.status_code == 200:
+            users = users_response.json()
+            mock_leaderboard = []
+            for i, user in enumerate(users):
+                mock_leaderboard.append({
+                    "rank": i + 1,
+                    "username": user.get("username", "Unknown"),
+                    "full_name": user.get("full_name", ""),
+                    "completion_time": user.get("best_completion_time"),
+                    "total_score": user.get("total_score", 0),
+                    "games_completed": user.get("games_completed", 0),
+                    "quantum_mastery_level": user.get("quantum_mastery_level", 1)
+                })
+            return jsonify({
+                "entries": mock_leaderboard,
+                "type": "speed",
+                "source": "user_stats"
+            })
+        return jsonify({
+            "entries": [
+                {"rank": 1, "username": "QuantumAlice", "completion_time": 180, "total_score": 4500, "games_completed": 15},
+                {"rank": 2, "username": "EntangleCharlie", "completion_time": 200, "total_score": 3200, "games_completed": 12},
+                {"rank": 3, "username": "SuperpositionBob", "completion_time": 240, "total_score": 2800, "games_completed": 8}
+            ],
+            "type": "speed",
+            "source": "demo"
+        })
+    except Exception as e:
+        return jsonify({
+            "entries": [
+                {"rank": 1, "username": "QuantumAlice", "completion_time": 180},
+                {"rank": 2, "username": "EntangleCharlie", "completion_time": 200}
+            ],
+            "type": "speed",
+            "source": "demo"
+        })
+
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
