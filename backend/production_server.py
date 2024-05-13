@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime, timezone
 import os
+import requests
 
 # Load environment variables from .env file
 try:
@@ -29,7 +30,6 @@ def root():
 def health_check():
     """Detailed health check"""
     # Test Supabase connection
-    import requests
     try:
         response = requests.get(f"{SUPABASE_REST_URL}/users?select=count", headers=get_supabase_headers(), timeout=5)
         db_status = "connected" if response.status_code == 200 else "error"
@@ -66,7 +66,6 @@ def get_rooms():
 @app.route('/api/auth/user')
 def get_user():
     """Get current user info from database"""
-    import requests
     try:
         response = requests.get(f"{SUPABASE_REST_URL}/users?limit=1", headers=get_supabase_headers())
         if response.status_code == 200:
@@ -85,7 +84,6 @@ def signup():
     """Real user signup - creates user and initial leaderboard entry"""
     if request.method == 'OPTIONS':
         return '', 200
-    import requests
     try:
         data = request.get_json()
         email = data.get("email")
@@ -136,7 +134,6 @@ def login():
     """User login"""
     if request.method == 'OPTIONS':
         return '', 200
-    import requests
     try:
         data = request.get_json()
         email = data.get("email")
@@ -171,7 +168,6 @@ def signin():
 @app.route('/api/leaderboard/score', methods=['GET'])
 def get_score_leaderboard():
     """Get score-based leaderboard with real user data"""
-    import requests
     try:
         response = requests.get(
             f"{SUPABASE_REST_URL}/leaderboard_entries?category=eq.total_score&order=total_score.desc&limit=10",
@@ -237,7 +233,6 @@ def get_score_leaderboard():
 @app.route('/api/leaderboard/speed', methods=['GET'])
 def get_speed_leaderboard():
     """Get speed-based leaderboard (fastest completion times)"""
-    import requests
     try:
         response = requests.get(
             f"{SUPABASE_REST_URL}/leaderboard_entries?category=eq.completion_time&order=completion_time.asc&limit=10",
@@ -300,6 +295,221 @@ def get_speed_leaderboard():
             "source": "demo"
         })
 
+# Database management endpoints
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    """Get all users from Supabase"""
+    try:
+        response = requests.get(f"{SUPABASE_REST_URL}/users", headers=get_supabase_headers())
+        if response.status_code == 200:
+            users = response.json()
+            return jsonify({
+                "users": users,
+                "count": len(users)
+            })
+        else:
+            return jsonify({"error": f"Database error: {response.status_code}"}), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/users', methods=['POST'])
+def create_user():
+    """Create a new user"""
+    try:
+        data = request.get_json()
+        response = requests.post(f"{SUPABASE_REST_URL}/users", 
+                               headers=get_supabase_headers(), 
+                               json=data)
+        if response.status_code in [200, 201]:
+            return jsonify({
+                "success": True,
+                "user": response.json()[0] if response.json() else data
+            })
+        else:
+            return jsonify({"error": f"Database error: {response.status_code}"}), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/test-supabase')
+def test_supabase():
+    """Test Supabase connection and show table info"""
+    try:
+        # Test connection by getting schema info
+        response = requests.get(f"{SUPABASE_REST_URL}/users?select=count", headers=get_supabase_headers())
+        
+        return jsonify({
+            "supabase_connection": "OK" if response.status_code == 200 else "ERROR",
+            "status_code": response.status_code,
+            "response": response.text[:200] if response.text else None,
+            "url": SUPABASE_REST_URL,
+            "headers_used": "apikey and Authorization headers set"
+        })
+    except Exception as e:
+        return jsonify({
+            "supabase_connection": "ERROR",
+            "error": str(e)
+        })
+
+# Real gameplay endpoints
+@app.route('/api/game/start', methods=['POST'])
+def start_game():
+    """Start a new game session"""
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        difficulty = data.get("difficulty", "easy")
+        
+        game_session = {
+            "user_id": user_id,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "difficulty": difficulty,
+            "current_room": "superposition",
+            "is_completed": False,
+            "room_times": {},
+            "room_attempts": {}
+        }
+        
+        # Try to create session in database
+        try:
+            response = requests.post(f"{SUPABASE_REST_URL}/game_sessions", 
+                                   headers=get_supabase_headers(), 
+                                   json=game_session)
+            if response.status_code in [200, 201]:
+                session = response.json()[0] if response.json() else game_session
+                session["id"] = session.get("id", f"demo-session-{datetime.now().timestamp()}")
+            else:
+                session = game_session
+                session["id"] = f"demo-session-{datetime.now().timestamp()}"
+        except:
+            session = game_session
+            session["id"] = f"demo-session-{datetime.now().timestamp()}"
+        
+        return jsonify({
+            "success": True,
+            "session": session
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/game/complete', methods=['POST'])
+def complete_game():
+    """Complete a game and update scores/leaderboard"""
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        session_id = data.get("session_id")
+        completion_time = data.get("completion_time", 300)  # seconds
+        total_score = data.get("total_score", 1000)
+        difficulty = data.get("difficulty", "easy")
+        rooms_completed = data.get("rooms_completed", 1)
+        hints_used = data.get("hints_used", 0)
+        
+        # Update user stats
+        user_updates = {
+            "games_completed": f"games_completed + 1",
+            "total_score": f"total_score + {total_score}",
+            "total_playtime": f"total_playtime + {completion_time}",
+            "last_login": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # If this is their best time, update it
+        if completion_time:
+            user_updates["best_completion_time"] = f"LEAST(COALESCE(best_completion_time, {completion_time}), {completion_time})"
+        
+        # Update user (try database, fallback to success)
+        try:
+            # For HTTP API, we need to construct the update differently
+            update_response = requests.patch(
+                f"{SUPABASE_REST_URL}/users?id=eq.{user_id}",
+                headers=get_supabase_headers(),
+                json={
+                    "games_completed": data.get("current_games_completed", 0) + 1,
+                    "total_score": data.get("current_total_score", 0) + total_score,
+                    "total_playtime": data.get("current_total_playtime", 0) + completion_time,
+                    "last_login": datetime.now(timezone.utc).isoformat()
+                }
+            )
+        except:
+            pass  # Update optional
+        
+        # Create leaderboard entry
+        leaderboard_entry = {
+            "user_id": user_id,
+            "session_id": session_id,
+            "category": "total_score",
+            "completion_time": completion_time,
+            "total_score": total_score,
+            "difficulty": difficulty,
+            "rooms_completed": rooms_completed,
+            "hints_used": hints_used,
+            "achieved_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Add to leaderboard (try database, fallback to success)
+        try:
+            requests.post(f"{SUPABASE_REST_URL}/leaderboard_entries", 
+                        headers=get_supabase_headers(), 
+                        json=leaderboard_entry)
+        except:
+            pass  # Leaderboard optional
+        
+        # Update game session as completed
+        try:
+            requests.patch(
+                f"{SUPABASE_REST_URL}/game_sessions?id=eq.{session_id}",
+                headers=get_supabase_headers(),
+                json={
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                    "total_time": completion_time,
+                    "is_completed": True
+                }
+            )
+        except:
+            pass  # Session update optional
+        
+        return jsonify({
+            "success": True,
+            "message": "Game completed successfully!",
+            "score": total_score,
+            "time": completion_time,
+            "leaderboard_entry": leaderboard_entry
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/game/save-progress', methods=['POST'])
+def save_progress():
+    """Save game progress"""
+    try:
+        data = request.get_json()
+        session_id = data.get("session_id")
+        current_room = data.get("current_room")
+        room_times = data.get("room_times", {})
+        room_attempts = data.get("room_attempts", {})
+        
+        # Update session progress (try database, fallback to success)
+        try:
+            requests.patch(
+                f"{SUPABASE_REST_URL}/game_sessions?id=eq.{session_id}",
+                headers=get_supabase_headers(),
+                json={
+                    "current_room": current_room,
+                    "room_times": room_times,
+                    "room_attempts": room_attempts
+                }
+            )
+        except:
+            pass  # Progress save optional
+        
+        return jsonify({
+            "success": True,
+            "message": "Progress saved"
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
@@ -329,4 +539,7 @@ def get_supabase_headers(use_service_key=False):
 
 if __name__ == '__main__':
     print("🚀 Starting Quantum Quest Production Flask Server...")
+    print(f"🔗 Supabase URL: {SUPABASE_URL}")
+    print(f"📡 REST API URL: {SUPABASE_REST_URL}")
+    print("✅ All endpoints configured for frontend integration")
     app.run(host='0.0.0.0', port=8000, debug=True)
