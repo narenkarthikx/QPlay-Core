@@ -3,8 +3,9 @@
 Production Flask Backend Server for Quantum Quest
 Uses HTTP requests to Supabase for better compatibility
 """
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from datetime import datetime, timezone
 import os
 
 # Load environment variables from .env file
@@ -75,6 +76,60 @@ def get_user():
         return jsonify({"error": "No user found"}), 404
     except Exception as e:
         return jsonify({"error": f"Failed to get user: {str(e)}"}), 500
+
+from flask import request
+from datetime import datetime, timezone
+
+@app.route('/api/auth/signup', methods=['POST', 'OPTIONS'])
+def signup():
+    """Real user signup - creates user and initial leaderboard entry"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    import requests
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        username = data.get("username", email.split("@")[0] if email else "player")
+        full_name = data.get("full_name", "")
+        check_response = requests.get(f"{SUPABASE_REST_URL}/users?email=eq.{email}", headers=get_supabase_headers())
+        if check_response.status_code == 200 and check_response.json():
+            return jsonify({"success": False, "error": "User already exists"}), 400
+        user_data = {
+            "email": email,
+            "username": username,
+            "full_name": full_name,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "is_verified": True,
+            "is_premium": False,
+            "total_playtime": 0,
+            "games_completed": 0,
+            "best_completion_time": None,
+            "total_score": 0,
+            "quantum_mastery_level": 1,
+            "is_active": True
+        }
+        response = requests.post(f"{SUPABASE_REST_URL}/users", headers=get_supabase_headers(), json=user_data)
+        if response.status_code in [200, 201]:
+            user = response.json()[0] if response.json() else user_data
+            leaderboard_entries = [{
+                "user_id": user.get("id"),
+                "category": "total_score",
+                "completion_time": None,
+                "total_score": 0,
+                "difficulty": "easy",
+                "rooms_completed": 0,
+                "hints_used": 0,
+                "achieved_at": datetime.now(timezone.utc).isoformat()
+            }]
+            try:
+                requests.post(f"{SUPABASE_REST_URL}/leaderboard_entries", headers=get_supabase_headers(), json=leaderboard_entries)
+            except:
+                pass
+            return jsonify({"success": True, "message": "Account created successfully!", "user": user})
+        else:
+            return jsonify({"success": False, "error": f"Failed to create user. Status: {response.status_code}"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Signup failed: {str(e)}"}), 500
 
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
