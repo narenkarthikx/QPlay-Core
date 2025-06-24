@@ -163,6 +163,11 @@ def login():
     except Exception as e:
         return jsonify({"success": False, "error": f"Login failed: {str(e)}"}), 500
 
+@app.route('/api/auth/signin', methods=['POST', 'OPTIONS'])
+def signin():
+    """Alias for login endpoint"""
+    return login()
+
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
