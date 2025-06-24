@@ -131,6 +131,38 @@ def signup():
     except Exception as e:
         return jsonify({"success": False, "error": f"Signup failed: {str(e)}"}), 500
 
+@app.route('/api/auth/login', methods=['POST', 'OPTIONS'])
+def login():
+    """User login"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    import requests
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        if not email:
+            return jsonify({"success": False, "error": "Email is required"}), 400
+        response = requests.get(f"{SUPABASE_REST_URL}/users?email=eq.{email}", headers=get_supabase_headers())
+        if response.status_code == 200:
+            users = response.json()
+            if users:
+                user = users[0]
+                try:
+                    requests.patch(
+                        f"{SUPABASE_REST_URL}/users?id=eq.{user['id']}",
+                        headers=get_supabase_headers(),
+                        json={"last_login": datetime.now(timezone.utc).isoformat()}
+                    )
+                except Exception:
+                    pass
+                return jsonify({"success": True, "user": user})
+            else:
+                return jsonify({"success": False, "error": "User not found"}), 404
+        else:
+            return jsonify({"success": False, "error": "Database connection failed"}), 500
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Login failed: {str(e)}"}), 500
+
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
