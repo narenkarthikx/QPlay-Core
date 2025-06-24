@@ -3,7 +3,7 @@
 Production Flask Backend Server for Quantum Quest
 Uses HTTP requests to Supabase for better compatibility
 """
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 import os
 
@@ -41,6 +41,26 @@ def health_check():
         "database": db_status,
         "websockets": "active"
     }
+
+@app.route('/v1/models', methods=['GET'])
+def get_models():
+    """Get available AI models - frontend compatibility"""
+    return jsonify({
+        "models": [
+            {"id": "quantum-gpt", "name": "Quantum GPT", "description": "AI model for quantum computing help"}
+        ]
+    })
+
+@app.route('/api/game/rooms')
+def get_rooms():
+    """Get available game rooms"""
+    return jsonify({
+        "rooms": [
+            {"id": "superposition", "name": "Superposition Tower", "difficulty": "easy", "unlocked": True},
+            {"id": "entanglement", "name": "Entanglement Bridge", "difficulty": "medium", "unlocked": False},
+            {"id": "tunneling", "name": "Tunneling Vault", "difficulty": "hard", "unlocked": False}
+        ]
+    })
 
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
