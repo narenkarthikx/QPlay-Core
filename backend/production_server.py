@@ -62,6 +62,20 @@ def get_rooms():
         ]
     })
 
+@app.route('/api/auth/user')
+def get_user():
+    """Get current user info from database"""
+    import requests
+    try:
+        response = requests.get(f"{SUPABASE_REST_URL}/users?limit=1", headers=get_supabase_headers())
+        if response.status_code == 200:
+            users = response.json()
+            if users:
+                return jsonify({"user": users[0]})
+        return jsonify({"error": "No user found"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to get user: {str(e)}"}), 500
+
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
