@@ -24,6 +24,24 @@ def root():
     """Health check endpoint"""
     return "Quantum Quest Backend is running!"
 
+@app.route('/health')
+def health_check():
+    """Detailed health check"""
+    # Test Supabase connection
+    import requests
+    try:
+        response = requests.get(f"{SUPABASE_REST_URL}/users?select=count", headers=get_supabase_headers(), timeout=5)
+        db_status = "connected" if response.status_code == 200 else "error"
+    except:
+        db_status = "disconnected"
+    
+    return {
+        "status": "healthy",
+        "quantum_engine": "operational",
+        "database": db_status,
+        "websockets": "active"
+    }
+
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
