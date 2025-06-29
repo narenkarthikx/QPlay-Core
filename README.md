@@ -1,116 +1,56 @@
 # Quantum Quest (QPlay-Core)
 
-Quantum Quest is a full-stack quantum-themed gaming platform. This repository contains both the frontend (React + Vite) and backend (Flask + Supabase) code.
+Quantum Quest is a fun quantum-themed game. This project has two parts:
+- **Frontend**: The game you see and play (React)
+- **Backend**: The server that saves your progress and scores (Python Flask)
 
 ---
 
-## Project Structure
+## How to Run the App
 
-```
-QPlay-Core/
-│
-├── backend/                  # Python Flask backend
-│   └── production_server.py  # Main Flask server (Supabase integration)
-│   └── requirements.txt      # Python dependencies
-│
-├── src/                      # Frontend source code (React + Vite)
-│   ├── App.tsx               # Main React app
-│   ├── main.tsx              # React entry point
-│   ├── index.css             # Global styles (quantum theme)
-│   ├── components/           # All UI and game components
-│   │   ├── Achievements.tsx
-│   │   ├── GameController.tsx
-│   │   ├── Leaderboard.tsx
-│   │   ├── MainMenu.tsx
-│   │   ├── QuantumGuide.tsx
-│   │   ├── RoomSelector.tsx
-│   │   ├── Settings.tsx
-│   │   ├── auth/AuthModal.tsx
-│   │   ├── rooms/            # Individual quantum game rooms
-│   │   │   ├── EntanglementBridge.tsx
-│   │   │   ├── ProbabilityBay.tsx
-│   │   │   ├── QuantumArchive.tsx
-│   │   │   ├── StateChambrer.tsx
-│   │   │   ├── SuperpositionTower.tsx
-│   │   │   ├── TunnelingVault.tsx
-│   │   └── ui/               # UI primitives (Button, ThemeProvider)
-│   ├── contexts/             # React Contexts (Auth, Game, Settings)
-│   ├── services/             # API service for backend communication
-│   ├── types/                # TypeScript types
-│   └── README.md             # Frontend-specific docs
-│
-├── .env                      # Environment variables (not tracked)
-├── .gitignore                # Git ignore rules
-├── index.html                # Main HTML entry
-├── vite.config.ts            # Vite config (ignored)
-└── README.md                 # This file
-```
+### 1. Get Ready
+- Make sure you have **Node.js** (for the frontend) and **Python 3** (for the backend) installed.
+
+### 2. Install Everything
+- Open a terminal in the main project folder.
+- Run this to install the frontend:
+  ```sh
+  npm install
+  ```
+- Then go to the backend folder and install the backend:
+  ```sh
+  cd backend
+  pip install -r requirements.txt
+  ```
+
+### 3. Set Up the Backend
+- In the `backend` folder, make a file called `.env` and add your Supabase info:
+  ```
+  SUPABASE_URL=your-supabase-url
+  SUPABASE_ANON_KEY=your-anon-key
+  SUPABASE_SERVICE_KEY=your-service-key
+  ```
+
+### 4. Start the Backend
+- In the `backend` folder, run:
+  ```sh
+  python production_server.py
+  ```
+
+### 5. Start the Frontend
+- In the main folder, run:
+  ```sh
+  npm run dev
+  ```
+- Open the link it shows (usually http://localhost:5173) in your browser.
 
 ---
 
-## Frontend (React + Vite)
-- **Modern React** with TypeScript
-- **Quantum-themed UI**: Custom components for game rooms, leaderboards, achievements, and more
-- **Contexts**: Auth, Game, and Settings contexts for state management
-- **API Service**: Communicates with Flask backend and Supabase
-- **Room Components**: Each quantum game room is a separate React component
-- **Styling**: index.css for global styles, ThemeProvider for dark/light mode
+## How the Project is Organized
 
-## Backend (Flask + Supabase)
-- **Flask server** (`backend/production_server.py`)
-- **CORS enabled** for frontend-backend communication
-- **Supabase integration**: Reads credentials from `.env` (not tracked)
-- **Health endpoints**: `/` and `/health` for status checks
-- **Ready for extension**: Add your own endpoints for game logic, user management, etc.
-
-## Getting Started
-
-### 1. Install Frontend Dependencies
-```sh
-npm install
-```
-
-### 2. Install Backend Dependencies
-```sh
-cd backend
-pip install -r requirements.txt
-```
-
-### 3. Environment Variables
-Create a `.env` file in the backend directory with your Supabase credentials:
-```
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key
-```
-
-### 4. Run the Backend
-```sh
-cd backend
-python production_server.py
-```
-
-### 5. Run the Frontend
-```sh
-npm run dev
-```
+- `backend/` — Python server code
+- `src/` — All the game code (React)
+- `index.html` — Main HTML file
+- `.env` — Your secret keys (not shared)
 
 ---
-
-## Development Timeline (June 24–29, 2025)
-- **Core types, contexts, and UI primitives**
-- **Game rooms and main features**
-- **API integration and styling**
-- **Final integration and documentation**
-
----
-
-## Next Steps
-- Continue backend development: add endpoints for game logic, user management, etc.
-- Connect frontend to backend endpoints
-- Polish UI/UX and add more quantum games!
-
----
-
-## License
-MIT

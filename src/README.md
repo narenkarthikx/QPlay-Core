@@ -141,7 +141,7 @@ The UI is built with **React** (TypeScript) and **Tailwind CSS**. All main UI lo
 
 ---
 
-## Making Changes to Quantum Logic (Step-by-Step for Beginners)
+## Making Changes to Quantum Logic (Step-by-Step)
 
 Quantum logic (the rules, puzzles, and physics) is what makes the game unique. You can change how the quantum puzzles work, add new rooms, or update the game flow. Here’s a very beginner-friendly guide—even if you don’t know React or TypeScript!
 
