@@ -1,0 +1,302 @@
+/**
+ * API Service for Quantum Quest Frontend
+ * Handles all communication with the Supabase-powered backend
+ */
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+interface SignInResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  user: any;
+}
+
+interface SignUpData {
+  email: string;
+  username: string;
+  password: string;
+  full_name?: string;
+}
+
+class ApiService {
+  private baseUrl: string;
+  private authToken: string | null = null;
+
+  constructor() {
+    this.baseUrl = API_BASE_URL;
+    // Load token from localStorage on initialization
+    this.authToken = localStorage.getItem('quantum-quest-token');
+  }
+
+  setAuthToken(token: string | null) {
+    this.authToken = token;
+    if (token) {
+      localStorage.setItem('quantum-quest-token', token);
+    } else {
+      localStorage.removeItem('quantum-quest-token');
+    }
+  }
+
+  private async request(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    
+    const defaultOptions: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.authToken && { 'Authorization': `Bearer ${this.authToken}` }),
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, defaultOptions);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`API request failed: ${endpoint}`, error);
+      throw error;
+    }
+  }
+
+  // Authentication API calls (Supabase-powered)
+  async signIn(email: string, password: string): Promise<SignInResponse> {
+    const response = await this.request('/api/auth/signin', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    
+    // Store token automatically
+    if (response.access_token) {
+      this.setAuthToken(response.access_token);
+    }
+    
+    return response;
+  }
+
+  async signUp(data: SignUpData): Promise<SignInResponse> {
+    const response = await this.request('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    
+    // Store token automatically
+    if (response.access_token) {
+      this.setAuthToken(response.access_token);
+    }
+    
+    return response;
+  }
+
+  async getCurrentUser() {
+    return this.request('/api/auth/me');
+  }
+
+  async updateProfile(data: any) {
+    return this.request('/api/auth/me', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async signOut() {
+    try {
+      await this.request('/api/auth/logout', { method: 'POST' });
+    } finally {
+      this.setAuthToken(null);
+    }
+  }
+
+  async getUserAchievements() {
+    return this.request('/api/auth/achievements');
+  }
+
+  async getUserStats() {
+    return this.request('/api/auth/stats');
+  }
+
+  // Leaderboard API calls
+  async getSpeedLeaderboard(limit: number = 50, difficulty?: string) {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    if (difficulty) params.append('difficulty', difficulty);
+    
+    return this.request(`/api/leaderboard/speed?${params}`);
+  }
+
+  async getScoreLeaderboard(limit: number = 50, difficulty?: string) {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    if (difficulty) params.append('difficulty', difficulty);
+    
+    return this.request(`/api/leaderboard/score?${params}`);
+  }
+
+  async getMasteryLeaderboard(limit: number = 50) {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    return this.request(`/api/leaderboard/mastery?${params}`);
+  }
+
+  async getWeeklyLeaderboard(category: string) {
+    return this.request(`/api/leaderboard/weekly?category=${category}`);
+  }
+
+  async submitToLeaderboard(sessionId: string) {
+    return this.request('/api/leaderboard/submit', {
+      method: 'POST',
+      body: JSON.stringify({ session_id: sessionId })
+    });
+  }
+
+  // Game Session API calls
+  async createGameSession() {
+    return this.request('/api/game/session', {
+      method: 'POST'
+    });
+  }
+
+  async updateGameSession(sessionId: string, data: any) {
+    return this.request(`/api/game/session/${sessionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async completeGameSession(sessionId: string) {
+    return this.request(`/api/game/session/${sessionId}/complete`, {
+      method: 'POST'
+    });
+  }
+
+  async getGameSessions() {
+    return this.request('/api/game/sessions');
+  }
+
+  // Quantum Physics API calls (unchanged)
+  async generateQuantumMeasurements(count: number = 50) {
+    return this.request('/api/quantum/probability/generate-measurements', {
+      method: 'POST',
+      body: JSON.stringify({ measurement_count: count })
+    });
+  }
+
+  async analyzePattern(measurements: number[]) {
+    return this.request('/api/quantum/probability/analyze-pattern', {
+      method: 'POST',
+      body: JSON.stringify(measurements)
+    });
+  }
+
+  async performQuantumMeasurement(axis: string) {
+    return this.request(`/api/quantum/state/measure/${axis}`, {
+      method: 'POST'
+    });
+  }
+
+  async reconstructQuantumState(measurements: Record<string, number>) {
+    return this.request('/api/quantum/state/reconstruct', {
+      method: 'POST',
+      body: JSON.stringify({ measurements })
+    });
+  }
+
+  async measureEntangledParticles(aliceAngle: number, bobAngle: number) {
+    return this.request('/api/quantum/entanglement/measure', {
+      method: 'POST',
+      body: JSON.stringify({ alice_angle: aliceAngle, bob_angle: bobAngle })
+    });
+  }
+
+  async performBellTest(measurementCount: number = 40) {
+    return this.request('/api/quantum/entanglement/bell-test', {
+      method: 'POST',
+      body: JSON.stringify({ measurement_count: measurementCount })
+    });
+  }
+
+  async getOptimalAngles() {
+    return this.request('/api/quantum/entanglement/optimal-angles');
+  }
+
+  async calculateTunneling(barrierHeight: number, barrierWidth: number, particleEnergy: number) {
+    return this.request('/api/quantum/tunneling/calculate', {
+      method: 'POST',
+      body: JSON.stringify({
+        barrier_height: barrierHeight,
+        barrier_width: barrierWidth,
+        particle_energy: particleEnergy
+      })
+    });
+  }
+
+  async optimizeTunnelingParameters(targetProbability: number = 20) {
+    return this.request(`/api/quantum/tunneling/optimize?target_probability=${targetProbability}`);
+  }
+
+  // Legacy game API calls (for backward compatibility)
+  async getGameState() {
+    // For now, return a default state - this will be replaced with session-based state
+    return {
+      completedRooms: [],
+      currentProgress: 0,
+      achievements: [],
+      totalScore: 0
+    };
+  }
+
+  async completeRoom(roomId: string, completionData: any) {
+    // This will be integrated with the session system
+    return { success: true, room: roomId };
+  }
+
+  async getAchievements() {
+    return this.getUserAchievements();
+  }
+
+  async getLeaderboard(limit: number = 10) {
+    return this.getScoreLeaderboard(limit);
+  }
+
+  async validateRoomSolution(roomId: string, solutionData: any) {
+    return this.request(`/api/game/validate/${roomId}`, {
+      method: 'POST',
+      body: JSON.stringify(solutionData)
+    });
+  }
+
+  async getPlayerProgress() {
+    return this.getUserStats();
+  }
+
+  async getGlobalStats() {
+    return this.request('/api/game/stats/global');
+  }
+
+  // Health checks
+  async checkHealth() {
+    return this.request('/health');
+  }
+
+  async checkQuantumEngineHealth() {
+    return this.request('/api/quantum/health');
+  }
+
+  // WebSocket connection (Supabase real-time)
+  createWebSocketConnection() {
+    if (!this.authToken) {
+      console.error('Auth token required for WebSocket connection');
+      return null;
+    }
+
+    const wsUrl = `${this.baseUrl.replace('http', 'ws')}/ws?token=${this.authToken}`;
+    return new WebSocket(wsUrl);
+  }
+}
+
+// Export singleton instance
+export const apiService = new ApiService();
+export default apiService;
