@@ -113,26 +113,6 @@ src/
 
 ## Component Architecture
 
-### Data Flow Pattern
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant C as Component
-    participant CTX as Context
-    participant API as API Service
-    participant B as Backend
-    
-    U->>C: User Interaction
-    C->>CTX: Update Context State
-    CTX->>API: Call API Function
-    API->>B: HTTP Request
-    B-->>API: JSON Response
-    API-->>CTX: Update State
-    CTX-->>C: Trigger Re-render
-    C-->>U: Updated UI
-```
-
 ### Context Management
 
 #### AuthContext
@@ -650,3 +630,88 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 - **API Token Management**: Handled by authentication context
 
 This frontend provides a complete, modern React application for the Quantum Quest game with proper architecture, error handling, and development workflow.
+
+# Making UI Changes
+
+The UI is built with **React** (TypeScript) and **Tailwind CSS**. All main UI logic and components are in the `src/components/` directory. Here’s how to make changes:
+
+### 1. Locate the Component
+- **Main screens**: `src/components/MainMenu.tsx`, `GameController.tsx`, `Leaderboard.tsx`, etc.
+- **UI elements**: `src/components/ui/` (e.g., `Button.tsx`, `ThemeProvider.tsx`)
+- **Rooms**: `src/components/rooms/` (each quantum room is a separate file)
+
+### 2. Edit the Component
+- Open the relevant `.tsx` file.
+- Use React/JSX to add, remove, or modify UI elements.
+- Use Tailwind CSS classes for styling (e.g., `bg-gradient-to-br`, `text-white`).
+- For new UI, create a new file in `components/` or `components/ui/` and export your component.
+
+### 3. Update State or Context
+- Use React hooks (`useState`, `useEffect`) for local state.
+- Use Contexts (`AuthContext`, `GameContext`, `SettingsContext`) for global state. Update or consume context values as needed.
+- To add new global state, update the relevant context in `src/contexts/` and its provider.
+
+### 4. Preview Changes
+- Run `npm run dev` to start the local dev server.
+- UI changes update live thanks to Vite’s hot reload.
+
+### 5. Add/Update Styles
+- Use Tailwind utility classes directly in JSX.
+- For custom styles, edit `src/index.css` or extend Tailwind in `tailwind.config.js`.
+
+---
+
+## Making Changes to Quantum Logic
+
+Quantum logic (game rules, puzzles, physics) is implemented in the **room components** and the **GameController**:
+
+### 1. Room Logic
+- Each quantum room (e.g., `SuperpositionTower.tsx`, `EntanglementBridge.tsx`) contains its own logic and state.
+- To change a puzzle, edit the relevant room file in `src/components/rooms/`.
+- Use React state to track quantum states, measurements, and user actions.
+- For new quantum puzzles, create a new file in `rooms/` and add it to the room selector/menu.
+
+### 2. Game Flow
+- The main game flow is managed in `GameController.tsx` and `GameContext.tsx`.
+- To change how rooms are unlocked, scores are calculated, or how the game progresses, update logic in these files.
+- For backend integration (saving progress, leaderboards), use the API service in `src/services/api.ts`.
+
+### 3. Quantum Simulation
+- For advanced quantum logic, use custom hooks (e.g., `useQuantumApi.ts`) or utility functions.
+- You can add new quantum state types or simulation logic in the room component or in a shared utility file.
+
+---
+
+## Example: Adding a New Quantum Room
+1. Create `src/components/rooms/NewQuantumRoom.tsx`:
+   ```tsx
+   import React, { useState } from 'react';
+   import { useGame } from '../../contexts/GameContext';
+   
+   const NewQuantumRoom = () => {
+     const { completeRoom } = useGame();
+     const [state, setState] = useState(/* initial quantum state */);
+     // ...quantum logic...
+     return (
+       <div>
+         {/* Room UI and logic */}
+         <button onClick={() => completeRoom('new-room', /*score*/ 100)}>Complete</button>
+       </div>
+     );
+   };
+   export default NewQuantumRoom;
+   ```
+2. Add it to the room selector/menu in `RoomSelector.tsx` and `GameController.tsx`.
+3. Update `game.ts` types if needed.
+
+---
+
+## Best Practices
+- Keep UI and logic modular: one component per file.
+- Use context for shared state, hooks for reusable logic.
+- Test changes with `npm run dev` and add tests in `__tests__/` if needed.
+- For backend changes, update the API service and backend endpoints as needed.
+
+---
+
+For more, see the detailed architecture and code comments in each file.
