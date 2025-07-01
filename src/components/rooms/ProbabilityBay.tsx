@@ -80,6 +80,15 @@ const ProbabilityBay: React.FC = () => {
           <h1 className="text-4xl font-orbitron font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
             PROBABILITY BAY
           </h1>
+          {/* Backstory for storyline enhancement */}
+          <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-purple-900/60 to-blue-900/60 border border-blue-700 shadow-lg">
+            <p className="text-base text-blue-200 font-semibold mb-2">
+              <span className="font-orbitron text-lg text-pink-300">Backstory:</span> The quantum dice you see are part of an experiment gone wrong by the legendary physicist <span className="font-bold text-purple-300">Dr. Schrödinger</span>.
+            </p>
+            <p className="text-base text-blue-100">
+              The quantum instability unleashed by this experiment now threatens to collapse the entire lab! Only you can restore balance by analyzing the dice outcomes and revealing the hidden quantum patterns.
+            </p>
+          </div>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
             Unravel the mysteries of quantum probabilities. Use the quantum dice simulator to analyze 
             measurement statistics and decode the probabilistic patterns that distinguish quantum from classical randomness.

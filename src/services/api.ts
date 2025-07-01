@@ -3,7 +3,7 @@
  * Handles all communication with the Supabase-powered backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 interface SignInResponse {
   access_token: string;
