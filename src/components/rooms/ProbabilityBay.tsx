@@ -83,17 +83,12 @@ const ProbabilityBay: React.FC = () => {
           {/* Backstory for storyline enhancement */}
           <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-purple-900/60 to-blue-900/60 border border-blue-700 shadow-lg">
             <p className="text-base text-blue-200 font-semibold mb-2">
-              <span className="font-orbitron text-lg text-pink-300">Backstory:</span> The quantum dice you see are part of an experiment gone wrong by the legendary physicist <span className="font-bold text-purple-300">Dr. Schrödinger</span>.
+              <span className="font-orbitron text-lg text-pink-300">Backstory:</span> The quantum dice you see were part of an experiment done by the legendary physicist <span className="font-bold text-purple-300">Dr. Schrödinger</span>.
             </p>
             <p className="text-base text-blue-100">
-              The quantum instability unleashed by this experiment now threatens to collapse the entire lab! Only you can restore balance by analyzing the dice outcomes and revealing the hidden quantum patterns.
+              However, the experiment went horribly wrong, and now the inherent quantum instability of these dice threaten to destroy the entire lab unless you restore balance by analyizing the dice outcomes!
             </p>
           </div>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            These quantum dice were part of a famous experiment conducted by renowned physicist Dr. Schrödinger. 
-            However, the experiment went horribly wrong, and now the inherent quantum instability of these dice threaten to destroy the entire lab
-            unless you restore balance by analyizing the dice outcomes!
-          </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
