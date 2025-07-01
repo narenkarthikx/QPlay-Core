@@ -9,6 +9,7 @@ import TunnelingVault from './rooms/TunnelingVault';
 import QuantumArchive from './rooms/QuantumArchive';
 import RoomSelector from './RoomSelector';
 import { Room } from '../types/game';
+import PortalTransition from './ui/PortalTransition';
 
 interface GameControllerProps {
   onBackToMenu: () => void;
@@ -17,6 +18,8 @@ interface GameControllerProps {
 const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   const { currentRoom, gameState, setCurrentRoom } = useGame();
   const [showRoomSelector, setShowRoomSelector] = useState(false);
+  const [showPortal, setShowPortal] = useState(false);
+  const [pendingRoom, setPendingRoom] = useState<Room | null>(null);
 
   const rooms: Room[] = [
     'probability-bay',
@@ -42,14 +45,24 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
 
   const goToNextRoom = () => {
     if (canGoNext) {
-      setCurrentRoom(rooms[currentRoomIndex + 1]);
+      setPendingRoom(rooms[currentRoomIndex + 1]);
+      setShowPortal(true);
     }
   };
 
   const goToPreviousRoom = () => {
     if (canGoPrevious) {
-      setCurrentRoom(rooms[currentRoomIndex - 1]);
+      setPendingRoom(rooms[currentRoomIndex - 1]);
+      setShowPortal(true);
     }
+  };
+
+  const handlePortalEnd = () => {
+    if (pendingRoom) {
+      setCurrentRoom(pendingRoom);
+      setPendingRoom(null);
+    }
+    setShowPortal(false);
   };
 
   const renderCurrentRoom = () => {
@@ -73,6 +86,7 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
 
   return (
     <div className="min-h-screen">
+      <PortalTransition show={showPortal} onEnd={handlePortalEnd} />
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">

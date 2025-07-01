@@ -80,6 +80,15 @@ const ProbabilityBay: React.FC = () => {
           <h1 className="text-4xl font-orbitron font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
             PROBABILITY BAY
           </h1>
+          {/* Backstory for storyline enhancement */}
+          <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-purple-900/60 to-blue-900/60 border border-blue-700 shadow-lg">
+            <p className="text-base text-blue-200 font-semibold mb-2">
+              <span className="font-orbitron text-lg text-pink-300">Backstory:</span> The quantum dice you see are part of an experiment gone wrong by the legendary physicist <span className="font-bold text-purple-300">Dr. Schrödinger</span>.
+            </p>
+            <p className="text-base text-blue-100">
+              The quantum instability unleashed by this experiment now threatens to collapse the entire lab! Only you can restore balance by analyzing the dice outcomes and revealing the hidden quantum patterns.
+            </p>
+          </div>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
             These quantum dice were part of a famous experiment conducted by renowned physicist Dr. Schrödinger. 
             However, the experiment went horribly wrong, and now the inherent quantum instability of these dice threaten to destroy the entire lab
@@ -126,20 +135,31 @@ const ProbabilityBay: React.FC = () => {
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-4">Probability Distribution</h3>
                 <div className="space-y-2">
-                  {getHistogramData().map((count, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-8 text-center">{index + 1}</div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-6 mx-3 relative overflow-hidden">
-                        <div
-                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-full transition-all duration-1000"
-                          style={{ width: `${(count / Math.max(...getHistogramData())) * 100}%` }}
-                        ></div>
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
-                          {count}
+                  {getHistogramData().map((count, index) => {
+                    // Assign a unique gradient for each bar
+                    const gradients = [
+                      'from-blue-500 to-cyan-400',    // 1
+                      'from-purple-500 to-pink-400',  // 2
+                      'from-green-500 to-emerald-400',// 3
+                      'from-yellow-400 to-orange-500',// 4
+                      'from-red-500 to-pink-500',     // 5
+                      'from-gray-500 to-gray-300'     // 6
+                    ];
+                    return (
+                      <div key={index} className="flex items-center">
+                        <div className="w-8 text-center">{index + 1}</div>
+                        <div className="flex-1 bg-gray-700 rounded-full h-6 mx-3 relative overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-1000 bg-gradient-to-r ${gradients[index]}`}
+                            style={{ width: `${(count / Math.max(...getHistogramData())) * 100}%` }}
+                          ></div>
+                          <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
+                            {count}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

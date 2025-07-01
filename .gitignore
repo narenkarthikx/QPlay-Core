@@ -29,7 +29,6 @@ tsconfig*.json
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
-tailwind.config.js
 vite.config.ts
 
 
