@@ -81,8 +81,9 @@ const ProbabilityBay: React.FC = () => {
             PROBABILITY BAY
           </h1>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            Unravel the mysteries of quantum probabilities. Use the quantum dice simulator to analyze 
-            measurement statistics and decode the probabilistic patterns that distinguish quantum from classical randomness.
+            These quantum dice were part of a famous experiment conducted by renowned physicist Dr. Schrödinger. 
+            However, the experiment went horribly wrong, and now the inherent quantum instability of these dice threaten to destroy the entire lab
+            unless you restore balance by analyizing the dice outcomes!
           </p>
         </div>
 
