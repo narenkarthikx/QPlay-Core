@@ -18,6 +18,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [showBackstory, setShowBackstory] = useState(false);
 
   const { user, signOut } = useAuth();
 
@@ -101,6 +102,15 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
         {/* Main Menu Buttons */}
         <div className="space-y-4 max-w-md mx-auto">
+          {/* Backstory Button */}
+          <button
+            onClick={() => setShowBackstory(true)}
+            className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3 text-lg mb-2"
+          >
+            <BookOpen className="w-6 h-6" />
+            <span>Backstory</span>
+          </button>
+
           <button
             onClick={onStartGame}
             className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 
@@ -221,6 +231,44 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
           onClose={() => setShowAuth(false)}
           initialMode={authMode}
         />
+      )}
+
+      {/* Backstory Modal */}
+      {showBackstory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
+          <div className="relative bg-gradient-to-br from-gray-900 via-purple-900 to-gray-800 border border-purple-700 rounded-2xl shadow-2xl max-w-lg w-full p-8 mx-4 animate-fade-in">
+            <button
+              onClick={() => setShowBackstory(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold focus:outline-none"
+              aria-label="Close Backstory"
+            >
+              ×
+            </button>
+            <h2 className="text-3xl font-orbitron font-bold mb-4 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent text-center">
+              Quantum Quest: The Backstory
+            </h2>
+            <div className="text-gray-200 text-base leading-relaxed space-y-4">
+              <p>
+                <span className="font-semibold text-purple-300">Dr. Schrödinger</span>, a brilliant but eccentric quantum physicist, has been conducting a series of daring experiments in his secret laboratory. His latest project: to entangle the minds of willing participants with the very fabric of quantum reality.
+              </p>
+              <p>
+                But something has gone awry. The quantum lab is destabilizing, and the boundaries between probability and certainty are breaking down. You, a courageous explorer, have volunteered to enter the quantum maze and restore stability before the entire experiment collapses.
+              </p>
+              <p>
+                <span className="font-semibold text-cyan-300">Your mission:</span> Solve quantum puzzles, master the mysteries of entanglement, and escape each room before the quantum state decoheres forever. The fate of Dr. Schrödinger's experiment—and perhaps reality itself—rests in your hands.
+              </p>
+            </div>
+          </div>
+          <style>{`
+            .animate-fade-in {
+              animation: fadeInModal 0.4s cubic-bezier(0.4,0,0.2,1);
+            }
+            @keyframes fadeInModal {
+              from { opacity: 0; transform: scale(0.95); }
+              to { opacity: 1; transform: scale(1); }
+            }
+          `}</style>
+        </div>
       )}
     </div>
   );
