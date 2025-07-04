@@ -12,26 +12,38 @@ const ProbabilityBay: React.FC = () => {
   const [decoySolved, setDecoySolved] = useState(false);
   const [roomCompleted, setRoomCompleted] = useState(false);
 
-  // Quantum dice simulator - biased towards certain outcomes
-  const rollQuantumDice = () => {
-    // Simulate quantum measurement with bias
-    const weights = [0.1, 0.1, 0.15, 0.35, 0.25, 0.05]; // Biased towards 4 and 5
-    const random = Math.random();
-    let sum = 0;
-    
-    for (let i = 0; i < weights.length; i++) {
-      sum += weights[i];
-      if (random < sum) {
-        return i + 1;
-      }
+   // Quantum dice simulator - biased towards certain outcomes
+        //  Before: fixed bias that always favored locker 4
+       // const weights = [0.1, 0.1, 0.15, 0.35, 0.25, 0.05];
+
+const rollQuantumDice = () => {
+  if (!rollQuantumDice.weights) {
+    const rawWeights = Array.from({ length: 6 }, () => Math.random()); // Random values
+    const total = rawWeights.reduce((sum, w) => sum + w, 0);            // Normalize
+    rollQuantumDice.weights = rawWeights.map(w => w / total);          // Probabilities sum to 1
+  }
+
+  const weights = rollQuantumDice.weights; // Use stored bias for consistency
+  const random = Math.random();
+  let sum = 0;
+
+  for (let i = 0; i < weights.length; i++) {
+    sum += weights[i];
+    if (random < sum) {
+      return i + 1;
     }
-    return 6;
-  };
+  }
+  return 6;
+};
+
+rollQuantumDice.weights = null as number[] | null;  // static property
 
   const performMeasurements = async () => {
     setIsRolling(true);
     setMeasurements([]);
     
+    rollQuantumDice.weights = null; // Reset the bias before each measurement run
+
     const newMeasurements: number[] = [];
     
     for (let i = 0; i < 50; i++) {
