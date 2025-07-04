@@ -76,7 +76,7 @@ rollQuantumDice.weights = null as number[] | null;  // static property
     
     if (lockerCode === expectedCode) {
       setDecoySolved(true);
-      if (selectedLocker === 4) { // Correct locker for quantum pattern
+      if (selectedLocker === parseInt(expectedCode)) { // Correct locker for quantum pattern
         setRoomCompleted(true);
         completeRoom('probability-bay');
       }
@@ -196,7 +196,7 @@ rollQuantumDice.weights = null as number[] | null;  // static property
                   onClick={() => setSelectedLocker(locker)}
                 >
                   <div className="text-center">
-                    {roomCompleted && locker === 4 ? (
+                   {roomCompleted && locker === parseInt(lockerCode) ? (
                       <Unlock className="w-8 h-8 mx-auto text-green-400" />
                     ) : (
                       <Lock className="w-8 h-8 mx-auto text-gray-400" />
