@@ -26,6 +26,14 @@ const RoomSelector: React.FC<RoomSelectorProps> = ({ onClose }) => {
       color: 'from-blue-500 to-cyan-500',
       icon: '🎲'
     },
+       {
+      id: 'superposition-tower',
+      name: 'Superposition Tower',
+      description: 'Master superposition and interference',
+      concept: 'Wave Function Superposition',
+      color: 'from-green-500 to-emerald-500',
+      icon: '🗼'
+    },
     {
       id: 'state-chamber',
       name: 'State Chamber',
@@ -33,14 +41,6 @@ const RoomSelector: React.FC<RoomSelectorProps> = ({ onClose }) => {
       concept: 'Quantum State Reconstruction',
       color: 'from-purple-500 to-violet-500',
       icon: '🔮'
-    },
-    {
-      id: 'superposition-tower',
-      name: 'Superposition Tower',
-      description: 'Master superposition and interference',
-      concept: 'Wave Function Superposition',
-      color: 'from-green-500 to-emerald-500',
-      icon: '🗼'
     },
     {
       id: 'entanglement-bridge',
