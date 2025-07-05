@@ -64,6 +64,32 @@ const QuantumGuide: React.FC<QuantumGuideProps> = ({ onClose }) => {
         </div>
       )
     },
+      {
+      title: "Superposition Tower",
+      icon: <Waves className="w-6 h-6 text-green-400" />,
+      content: (
+        <div className="space-y-4">
+          <p className="text-gray-300">
+            Navigate using quantum superposition and constructive interference.
+          </p>
+          <div className="bg-green-900/30 border border-green-500 rounded-xl p-4">
+            <h3 className="font-semibold text-green-300 mb-2">Key Concepts</h3>
+            <ul className="text-green-200 text-sm space-y-1">
+              <li>• Quantum superposition</li>
+              <li>• Hadamard transformations</li>
+              <li>• Wave interference patterns</li>
+            </ul>
+          </div>
+          <div className="bg-gray-700/50 rounded-xl p-4">
+            <h3 className="font-semibold mb-2">Strategy Tips</h3>
+            <p className="text-sm text-gray-300">
+              Only superposition states can create stable paths. Use Hadamard gates (H) to transform 
+              classical states into superposition. Wrong steps cause decoherence!
+            </p>
+          </div>
+        </div>
+      )
+    },
     {
       title: "State Chamber",
       icon: <div className="text-2xl">🔮</div>,
@@ -85,32 +111,6 @@ const QuantumGuide: React.FC<QuantumGuideProps> = ({ onClose }) => {
             <p className="text-sm text-gray-300">
               Perform measurements along X, Y, and Z axes strategically. You have limited attempts, 
               so plan carefully. Watch for decoherence - adjust the noise filter to isolate the true state.
-            </p>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Superposition Tower",
-      icon: <Waves className="w-6 h-6 text-green-400" />,
-      content: (
-        <div className="space-y-4">
-          <p className="text-gray-300">
-            Navigate using quantum superposition and constructive interference.
-          </p>
-          <div className="bg-green-900/30 border border-green-500 rounded-xl p-4">
-            <h3 className="font-semibold text-green-300 mb-2">Key Concepts</h3>
-            <ul className="text-green-200 text-sm space-y-1">
-              <li>• Quantum superposition</li>
-              <li>• Hadamard transformations</li>
-              <li>• Wave interference patterns</li>
-            </ul>
-          </div>
-          <div className="bg-gray-700/50 rounded-xl p-4">
-            <h3 className="font-semibold mb-2">Strategy Tips</h3>
-            <p className="text-sm text-gray-300">
-              Only superposition states can create stable paths. Use Hadamard gates (H) to transform 
-              classical states into superposition. Wrong steps cause decoherence!
             </p>
           </div>
         </div>
