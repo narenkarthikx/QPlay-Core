@@ -1,11 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Compass, Zap, Timer, AlertTriangle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+
+// Add global type declarations for Blochy libraries
+declare global {
+  interface Window {
+    Plotly: any;
+    math: any;
+    gen_bloch_sphere: () => any;
+    update_state_plot: (redraw: boolean) => void;
+    rotate_state: (axis: string, angle: number) => void;
+    STATE: any[];
+    BLOCHSPHERE: any;
+    PHOSPHOR_ENABLED: boolean;
+    PHOSPHOR: any[];
+  }
+}
 
 interface BlochVector {
   x: number;
   y: number;
   z: number;
+}
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
 }
 
 const StateChambrer: React.FC = () => {
@@ -19,9 +46,45 @@ const StateChambrer: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
   const [roomCompleted, setRoomCompleted] = useState(false);
   const [showDecoherence, setShowDecoherence] = useState(false);
+  const [isFilterApplying, setIsFilterApplying] = useState(false);
+  const blochSphereRef = useRef<HTMLDivElement>(null);
+  const [blochSphereLoaded, setBlochSphereLoaded] = useState(false);
+  const [scriptsLoaded, setScriptsLoaded] = useState(false);
+
+  // Enhanced slider performance state
+  const sliderRef = useRef<HTMLInputElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [displayValue, setDisplayValue] = useState(0);
 
   // Hidden target state (players need to reconstruct this)
   const targetState: BlochVector = { x: 0.6, y: 0.8, z: 0.2 };
+
+  // Memoized debounce function to prevent recreation
+  const stableDebounce = useMemo(
+    () => debounce((value: number) => {
+      setNoiseFilter(value);
+    }, 16), // ~60fps updates
+    []
+  );
+
+  // Optimized input handler with direct DOM manipulation
+  const handleSliderInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    
+    // Use requestAnimationFrame for smooth visual updates
+    requestAnimationFrame(() => {
+      // Direct DOM manipulation for immediate visual feedback
+      if (progressRef.current) {
+        progressRef.current.style.width = `${value * 100}%`;
+      }
+      
+      // Update display value immediately for UI feedback
+      setDisplayValue(value);
+    });
+    
+    // Debounced state update for React logic
+    stableDebounce(value);
+  }, [stableDebounce]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -38,6 +101,138 @@ const StateChambrer: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [isActive, timeLeft]);
+  
+  // Load Blochy scripts and initialize Bloch sphere with proper error handling
+  useEffect(() => {
+    const loadScripts = async () => {
+      try {
+        // Add CSS for zero-lag slider first
+        const style = document.createElement('style');
+        style.textContent = `
+          .slider-no-lag {
+            outline: none;
+            background: transparent;
+            margin: 0;
+            padding: 0;
+          }
+
+          .slider-no-lag::-webkit-slider-thumb {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border: 2px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: none !important;
+            transform: none !important;
+          }
+
+          .slider-no-lag::-webkit-slider-thumb:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+          }
+
+          .slider-no-lag::-webkit-slider-thumb:active {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          }
+
+          .slider-no-lag::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border: 2px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: none !important;
+          }
+
+          .slider-no-lag::-moz-range-track {
+            background: transparent;
+            border: none;
+            height: 2px;
+          }
+
+          .slider-no-lag,
+          .slider-no-lag * {
+            transition: none !important;
+            animation-duration: 0s !important;
+          }
+        `;
+        document.head.appendChild(style);
+
+        // Load required scripts with better error handling
+        const scripts = [
+          '/src/Blochy-main/plotly-2.16.1.min.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.2.1/math.js',
+          '/src/Blochy-main/helper.js',
+          '/src/Blochy-main/quantum.js',
+          '/src/Blochy-main/plot.js',
+          '/src/Blochy-main/ui.js'
+        ];
+  
+        for (const src of scripts) {
+          await new Promise<void>((resolve, reject) => {
+            // Check if script already loaded
+            if (document.querySelector(`script[src="${src}"]`)) {
+              resolve();
+              return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => resolve();
+            script.onerror = () => {
+              console.warn(`Failed to load script: ${src}`);
+              resolve(); // Continue loading other scripts
+            };
+            document.head.appendChild(script);
+          });
+        }
+
+        setScriptsLoaded(true);
+
+        // Wait a bit for scripts to initialize
+        await new Promise(resolve => setTimeout(resolve, 100));
+  
+        // Initialize global variables with safety checks
+        if (typeof window !== 'undefined') {
+          window.PHOSPHOR_ENABLED = false;
+          window.PHOSPHOR = [];
+          
+          // Only initialize if math library is available
+          if (window.math) {
+            window.STATE = [window.math.complex(1, 0), window.math.complex(0, 0)];
+          }
+          
+          // Create and draw the Bloch sphere with safety checks
+          if (blochSphereRef.current && window.gen_bloch_sphere) {
+            try {
+              window.BLOCHSPHERE = window.gen_bloch_sphere();
+              if (window.update_state_plot) {
+                window.update_state_plot(true);
+              }
+              setBlochSphereLoaded(true);
+            } catch (error) {
+              console.warn('Failed to initialize Bloch sphere:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading Blochy scripts:', error);
+      }
+    };
+  
+    loadScripts();
+
+    // Cleanup function
+    return () => {
+      // Clean up any dynamically added scripts and styles
+      const scripts = document.querySelectorAll('script[src*="Blochy-main"], script[src*="mathjs"]');
+      scripts.forEach(script => script.remove());
+    };
+  }, []);
 
   const performMeasurement = (axis: 'x' | 'y' | 'z') => {
     if (measurementCount[axis] >= 3) return;
@@ -75,14 +270,21 @@ const StateChambrer: React.FC = () => {
   };
 
   const applyNoiseFilter = () => {
-    const magnitude = Math.sqrt(
-      reconstructedState.x ** 2 + reconstructedState.y ** 2 + reconstructedState.z ** 2
-    );
+    setIsFilterApplying(true);
     
-    if (magnitude > 0.9 && magnitude < 1.1) {
-      setRoomCompleted(true);
-      completeRoom('state-chamber');
-    }
+    // Add a brief delay to show the applying animation
+    setTimeout(() => {
+      const magnitude = Math.sqrt(
+        reconstructedState.x ** 2 + reconstructedState.y ** 2 + reconstructedState.z ** 2
+      );
+      
+      if (magnitude > 0.9 && magnitude < 1.1) {
+        setRoomCompleted(true);
+        completeRoom('state-chamber');
+      }
+      
+      setIsFilterApplying(false);
+    }, 1000);
   };
 
   const getBlochSphereColor = () => {
@@ -91,6 +293,54 @@ const StateChambrer: React.FC = () => {
     }
     return 'from-purple-500 to-violet-500';
   };
+  
+  // Function to convert Bloch sphere coordinates to Euler angles
+  const blochSphereToEuler = (X: number, Y: number, Z: number) => {
+    const norm = Math.sqrt(X*X + Y*Y + Z*Z);
+    if (norm === 0) {
+      return { x: 0, y: 0, z: 0 };
+    }
+    const x = X / norm;
+    const y = Y / norm;
+    const z = Z / norm;
+    
+    const theta = Math.acos(Math.max(-1, Math.min(1, z))); // Clamp to avoid NaN
+    const phi = Math.atan2(y, x);
+    
+    return {
+      x: 0,
+      y: theta,
+      z: phi
+    };
+  };
+  
+  // Update Bloch sphere when reconstructed state changes with safety checks
+  useEffect(() => {
+    if (blochSphereLoaded && scriptsLoaded && 
+        (reconstructedState.x !== 0 || reconstructedState.y !== 0 || reconstructedState.z !== 0)) {
+      
+      try {
+        // Safety checks before calling Blochy functions
+        if (window.math && window.STATE && window.rotate_state && window.update_state_plot) {
+          // Reset to |0> state
+          window.STATE = [window.math.complex(1, 0), window.math.complex(0, 0)];
+          
+          // Calculate rotations from reconstructed state
+          const rotations = blochSphereToEuler(reconstructedState.x, reconstructedState.y, reconstructedState.z);
+          
+          // Apply the rotations
+          window.rotate_state('x', rotations.x);
+          window.rotate_state('y', rotations.y);
+          window.rotate_state('z', rotations.z);
+          
+          // Re-draw with the updated state
+          window.update_state_plot(true);
+        }
+      } catch (error) {
+        console.warn('Error updating Bloch sphere:', error);
+      }
+    }
+  }, [reconstructedState, blochSphereLoaded, scriptsLoaded]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900/20 to-violet-900/20 p-6">
@@ -122,71 +372,152 @@ const StateChambrer: React.FC = () => {
                 </div>
               )}
             </div>
-
-            {/* Bloch Sphere Representation */}
-            <div className="relative w-80 h-80 mx-auto mb-6">
-              <div className={`w-full h-full rounded-full bg-gradient-to-br ${getBlochSphereColor()} 
-                             opacity-20 border-2 border-purple-400/50`}></div>
-              
-              {/* Coordinate axes */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-64 h-64">
-                  {/* X axis */}
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-400/50"></div>
-                  <div className="absolute top-1/2 right-0 text-red-400 text-sm">X</div>
-                  
-                  {/* Y axis */}
-                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-green-400/50 transform rotate-45"></div>
-                  <div className="absolute top-0 left-1/2 text-green-400 text-sm">Y</div>
-                  
-                  {/* Z axis */}
-                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-blue-400/50"></div>
-                  <div className="absolute top-0 left-1/2 text-blue-400 text-sm ml-4">Z</div>
-                  
-                  {/* State vector */}
-                  {reconstructedState.x !== 0 || reconstructedState.y !== 0 || reconstructedState.z !== 0 ? (
-                    <div
-                      className="absolute w-2 h-2 bg-cyan-400 rounded-full transform -translate-x-1 -translate-y-1"
-                      style={{
-                        left: `${50 + reconstructedState.x * 30}%`,
-                        top: `${50 - reconstructedState.z * 30}%`,
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-cyan-400 rounded-full animate-pulse"></div>
+          
+            {/* Bloch Sphere Container */}
+            <div className="flex justify-center mb-6">
+              <div 
+                ref={blochSphereRef}
+                id="myDiv" 
+                style={{width: '600px', height: '600px'}}
+                className="rounded-lg bg-gray-900/50"
+              >
+                {!blochSphereLoaded && (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto mb-2"></div>
+                      <p>Loading Quantum Bloch Sphere...</p>
                     </div>
-                  ) : null}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
-
+          
+            {/* Hidden inputs for Blochy scripts */}
+            <div style={{display: 'none'}}>
+              <input type="hidden" id="spin_color" value="#1a237e" />
+              <input type="hidden" id="phosphor_color" value="#1a237e" />
+              <input type="hidden" id="phosphor_length" value="10" />
+              <input type="hidden" id="north_text" value="0" />
+              <input type="hidden" id="south_text" value="1" />
+              <input type="hidden" id="export_size" value="800" />
+            </div>
+          
+            {/* Animated Decoherence Warning Section */}
             {showDecoherence && (
-              <div className="mb-6">
-                <div className="flex items-center mb-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-400 mr-2" />
-                  <span className="text-orange-400 font-semibold">Decoherence Detected!</span>
-                </div>
-                <p className="text-gray-300 text-sm mb-4">
-                  The quantum state is degrading. Adjust the noise filter to isolate the true state.
-                </p>
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-400">Noise Filter: {noiseFilter.toFixed(2)}</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={noiseFilter}
-                    onChange={(e) => setNoiseFilter(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
-                  <button
-                    onClick={applyNoiseFilter}
-                    className="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-violet-500 
-                             hover:from-purple-400 hover:to-violet-400 rounded-xl font-semibold 
-                             transition-all duration-300"
-                  >
-                    Apply Filter
-                  </button>
+              <div className="mb-6 transform transition-all duration-700 ease-out animate-in slide-in-from-bottom-4 fade-in">
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-red-900/20 to-orange-900/20 border border-red-500/30 backdrop-blur-sm">
+                  {/* Animated background pulse */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-orange-500/10 animate-pulse"></div>
+                  
+                  {/* Glowing border effect */}
+                  <div className="absolute inset-0 rounded-xl border-2 border-red-500/50 animate-pulse"></div>
+                  
+                  <div className="relative p-4 space-y-4">
+                    <div className="flex items-center mb-2">
+                      <AlertTriangle className="w-5 h-5 text-orange-400 mr-2 animate-bounce" />
+                      <span className="text-orange-400 font-semibold animate-pulse">
+                        Decoherence Detected!
+                      </span>
+                      {/* Animated warning dots */}
+                      <div className="ml-2 flex space-x-1">
+                        <div className="w-2 h-2 bg-red-400 rounded-full animate-ping"></div>
+                        <div className="w-2 h-2 bg-orange-400 rounded-full animate-ping" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-300 text-sm mb-4">
+                      The quantum state is degrading. Adjust the noise filter to isolate the true state.
+                    </p>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm text-gray-400">Noise Filter:</label>
+                        <span className="text-lg font-mono text-cyan-400 transition-colors duration-300 hover:text-cyan-300">
+                          {displayValue.toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      {/* Zero-lag slider container */}
+                      <div className="relative">
+                        {/* Background track */}
+                        <div className="w-full h-2 bg-gray-700 rounded-lg"></div>
+                        
+                        {/* Progress indicator with ref for direct manipulation */}
+                        <div 
+                          ref={progressRef}
+                          className="absolute top-0 left-0 h-2 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg pointer-events-none"
+                          style={{width: `${displayValue * 100}%`}}
+                        >
+                          <div className="absolute inset-0 bg-white/20 animate-pulse rounded-lg"></div>
+                        </div>
+                        
+                        {/* Input slider with zero styling interference */}
+                        <input
+                          ref={sliderRef}
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={displayValue}
+                          onInput={handleSliderInput} // Use onInput instead of onChange for immediate response
+                          className="absolute top-0 left-0 w-full h-2 appearance-none bg-transparent cursor-pointer slider-no-lag"
+                        />
+                      </div>
+                      
+                      {/* Filter quality indicator */}
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-500 ${
+                              displayValue < 0.3 ? 'bg-red-500' : 
+                              displayValue < 0.7 ? 'bg-yellow-500' : 
+                              'bg-green-500'
+                            }`}
+                            style={{width: `${displayValue * 100}%`}}
+                          />
+                        </div>
+                        <span className={`text-xs font-medium transition-colors duration-300 ${
+                          displayValue < 0.3 ? 'text-red-400' : 
+                          displayValue < 0.7 ? 'text-yellow-400' : 
+                          'text-green-400'
+                        }`}>
+                          {displayValue < 0.3 ? 'Poor' : 
+                           displayValue < 0.7 ? 'Fair' : 
+                           'Excellent'}
+                        </span>
+                      </div>
+                      
+                      {/* Animated Apply Filter Button */}
+                      <button
+                        onClick={applyNoiseFilter}
+                        disabled={isFilterApplying}
+                        className={`w-full px-4 py-3 rounded-xl font-semibold text-white
+                                 transition-all duration-300 transform hover:scale-105 
+                                 active:scale-95 disabled:scale-100 disabled:opacity-70
+                                 ${isFilterApplying 
+                                   ? 'bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse' 
+                                   : 'bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400'
+                                 }
+                                 shadow-lg hover:shadow-xl disabled:cursor-not-allowed
+                                 relative overflow-hidden`}
+                      >
+                        {isFilterApplying && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-slide-right"></div>
+                        )}
+                        <span className="relative flex items-center justify-center">
+                          {isFilterApplying ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                              Processing Filter...
+                            </>
+                          ) : (
+                            'Apply Filter'
+                          )}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
