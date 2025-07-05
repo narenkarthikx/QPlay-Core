@@ -197,8 +197,8 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto">
             {[
               { name: 'Probability Bay', color: 'from-blue-500 to-cyan-500', icon: '🎲' },
-              { name: 'State Chamber', color: 'from-purple-500 to-violet-500', icon: '🔮' },
               { name: 'Superposition Tower', color: 'from-green-500 to-emerald-500', icon: '🗼' },
+              { name: 'State Chamber', color: 'from-purple-500 to-violet-500', icon: '🔮' },
               { name: 'Entanglement Bridge', color: 'from-red-500 to-pink-500', icon: '🌉' },
               { name: 'Tunneling Vault', color: 'from-yellow-500 to-orange-500', icon: '🏛️' },
               { name: 'Quantum Archive', color: 'from-indigo-500 to-purple-500', icon: '📚' }

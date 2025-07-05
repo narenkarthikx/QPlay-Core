@@ -23,8 +23,8 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
 
   const rooms: Room[] = [
     'probability-bay',
-    'state-chamber', 
     'superposition-tower',
+    'state-chamber', 
     'entanglement-bridge',
     'tunneling-vault',
     'quantum-archive'
