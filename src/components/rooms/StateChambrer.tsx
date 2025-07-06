@@ -163,14 +163,15 @@ const StateChambrer: React.FC = () => {
         document.head.appendChild(style);
 
         // Load required scripts with better error handling
-        const scripts = [
-          '/src/Blochy-main/plotly-2.16.1.min.js',
-          'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.2.1/math.js',
-          '/src/Blochy-main/helper.js',
-          '/src/Blochy-main/quantum.js',
-          '/src/Blochy-main/plot.js',
-          '/src/Blochy-main/ui.js'
-        ];
+      const scripts = [
+  '/Blochy-main/plotly-2.16.1.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.2.1/math.js',
+  '/Blochy-main/helper.js',
+  '/Blochy-main/quantum.js',
+  '/Blochy-main/plot.js',
+  '/Blochy-main/ui.js'
+];
+
   
         for (const src of scripts) {
           await new Promise<void>((resolve, reject) => {
