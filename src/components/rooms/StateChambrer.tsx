@@ -269,23 +269,33 @@ const StateChambrer: React.FC = () => {
     }
   };
 
-  const applyNoiseFilter = () => {
-    setIsFilterApplying(true);
-    
-    // Add a brief delay to show the applying animation
-    setTimeout(() => {
-      const magnitude = Math.sqrt(
-        reconstructedState.x ** 2 + reconstructedState.y ** 2 + reconstructedState.z ** 2
-      );
-      
-      if (magnitude > 0.9 && magnitude < 1.1) {
-        setRoomCompleted(true);
-        completeRoom('state-chamber');
-      }
-      
-      setIsFilterApplying(false);
-    }, 1000);
-  };
+    const applyNoiseFilter = () => {
+  setIsFilterApplying(true);
+
+  setTimeout(() => {
+    // Apply the noise filter by scaling the vector
+    const cleaned: BlochVector = {
+      x: reconstructedState.x * noiseFilter,
+      y: reconstructedState.y * noiseFilter,
+      z: reconstructedState.z * noiseFilter,
+    };
+
+    // Update the reconstructed state
+    setReconstructedState(cleaned);
+
+    //  Check if the cleaned state is "pure" enough
+    const magnitude = Math.sqrt(
+      cleaned.x ** 2 + cleaned.y ** 2 + cleaned.z ** 2
+    );
+
+    if (magnitude > 0.9 && magnitude < 1.1) {
+      setRoomCompleted(true);
+      completeRoom('state-chamber');
+    }
+
+    setIsFilterApplying(false);
+  }, 1000);
+};
 
   const getBlochSphereColor = () => {
     if (showDecoherence && noiseFilter < 0.7) {
@@ -316,32 +326,47 @@ const StateChambrer: React.FC = () => {
   
   // Update Bloch sphere when reconstructed state changes with safety checks
   useEffect(() => {
-    if (blochSphereLoaded && scriptsLoaded && 
-        (reconstructedState.x !== 0 || reconstructedState.y !== 0 || reconstructedState.z !== 0)) {
-      
-      try {
-        // Safety checks before calling Blochy functions
-        if (window.math && window.STATE && window.rotate_state && window.update_state_plot) {
-          // Reset to |0> state
-          window.STATE = [window.math.complex(1, 0), window.math.complex(0, 0)];
-          
-          // Calculate rotations from reconstructed state
-          const rotations = blochSphereToEuler(reconstructedState.x, reconstructedState.y, reconstructedState.z);
-          
-          // Apply the rotations
-          window.rotate_state('x', rotations.x);
-          window.rotate_state('y', rotations.y);
-          window.rotate_state('z', rotations.z);
-          
-          // Re-draw with the updated state
-          window.update_state_plot(true);
-        }
-      } catch (error) {
-        console.warn('Error updating Bloch sphere:', error);
-      }
-    }
-  }, [reconstructedState, blochSphereLoaded, scriptsLoaded]);
+  if (
+    blochSphereLoaded &&
+    scriptsLoaded &&
+    (reconstructedState.x !== 0 || reconstructedState.y !== 0 || reconstructedState.z !== 0)
+  ) {
+    try {
+      if (window.math && window.STATE && window.rotate_state && window.update_state_plot) {
+        // Reset to |0⟩ state
+        window.STATE = [window.math.complex(1, 0), window.math.complex(0, 0)];
 
+        // Apply the noise filter to the vector
+        const filteredVector = {
+          x: reconstructedState.x * noiseFilter,
+          y: reconstructedState.y * noiseFilter,
+          z: reconstructedState.z * noiseFilter,
+        };
+
+        // Convert to Bloch sphere rotation angles
+        const rotations = blochSphereToEuler(filteredVector.x, filteredVector.y, filteredVector.z);
+
+        // Rotate the state visually
+        window.rotate_state('x', rotations.x);
+        window.rotate_state('y', rotations.y);
+        window.rotate_state('z', rotations.z);
+
+        // Update plot
+        window.update_state_plot(true);
+      }
+    } catch (error) {
+      console.warn('Error updating Bloch sphere:', error);
+    }
+  }
+}, [  
+  reconstructedState.x,
+  reconstructedState.y,
+  reconstructedState.z,
+  noiseFilter,
+  blochSphereLoaded,
+  scriptsLoaded
+]);
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900/20 to-violet-900/20 p-6">
       <div className="max-w-6xl mx-auto">
