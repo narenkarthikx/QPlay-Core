@@ -7,6 +7,8 @@ function init_plotting(data) {
 
     var layout = {
         hovermode: 'closest',
+         paper_bgcolor: 'rgba(0,0,0,0)', //  transparent background
+         plot_bgcolor: 'rgba(0,0,0,0)',  // plot area background
         scene: {
             xaxis: {
                 showspikes: false,
