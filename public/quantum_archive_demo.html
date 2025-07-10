@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quantum Archive Demo</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: #1a1a2e; 
+            color: #eee; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: rgba(0,0,0,0.3); 
+            padding: 30px; 
+            border-radius: 10px; 
+        }
+        .demo-box { 
+            background: rgba(30,30,60,0.8); 
+            border: 2px solid #6366f1; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin: 20px 0; 
+        }
+        .feedback { 
+            background: rgba(251, 191, 36, 0.2); 
+            border: 1px solid #f59e0b; 
+            border-radius: 5px; 
+            padding: 15px; 
+            margin: 10px 0;
+        }
+        .cooldown { 
+            background: rgba(239, 68, 68, 0.2); 
+            border: 1px solid #dc2626; 
+            border-radius: 5px; 
+            padding: 15px; 
+            margin: 10px 0;
+        }
+        .success { 
+            background: rgba(34, 197, 94, 0.2); 
+            border: 1px solid #16a34a; 
+            border-radius: 5px; 
+            padding: 15px; 
+            margin: 10px 0;
+        }
+        button { 
+            background: linear-gradient(45deg, #6366f1, #8b5cf6); 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:disabled { 
+            background: #555; 
+            cursor: not-allowed; 
+        }
+        .concept { 
+            background: rgba(147, 51, 234, 0.3); 
+            border: 1px solid #9333ea; 
+            border-radius: 5px; 
+            padding: 10px; 
+            margin: 5px; 
+            display: inline-block; 
+            cursor: pointer;
+        }
+        .concept.selected { 
+            background: rgba(147, 51, 234, 0.6); 
+            border-color: #a855f7;
+        }
+        .attempts { 
+            color: #f87171; 
+            font-weight: bold; 
+        }
+        h1, h2, h3 { color: #a855f7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Quantum Archive - Anti-Brute Force Demo</h1>
+        
+        <div class="demo-box">
+            <h2>Enhanced Security Features</h2>
+            <ul>
+                <li>✅ Progressive cooldown penalties (5-30 seconds)</li>
+                <li>✅ Limited attempts (5 maximum before reset required)</li>
+                <li>✅ Specific feedback for wrong connections</li>
+                <li>✅ Prerequisite room validation</li>
+                <li>✅ Connection attempt tracking</li>
+            </ul>
+        </div>
+
+        <div class="demo-box">
+            <h2>Concept Selection (Demo)</h2>
+            <p>Select quantum concepts to connect:</p>
+            <div id="concepts">
+                <div class="concept" onclick="toggleConcept('probability')">Quantum Probability</div>
+                <div class="concept" onclick="toggleConcept('state')">Quantum States</div>
+                <div class="concept" onclick="toggleConcept('superposition')">Superposition</div>
+                <div class="concept" onclick="toggleConcept('entanglement')">Quantum Entanglement</div>
+                <div class="concept" onclick="toggleConcept('tunneling')">Quantum Tunneling</div>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <span>Selected: <span id="selectedCount">0</span>/5 concepts</span>
+                <span class="attempts">Attempts remaining: <span id="attemptsLeft">5</span>/5</span>
+            </div>
+            
+            <button id="connectBtn" onclick="attemptConnection()">Connect Quantum Concepts</button>
+            <button id="resetBtn" onclick="resetDemo()" style="display:none;">Reset Demo</button>
+        </div>
+
+        <div id="feedback"></div>
+        <div id="cooldownDiv" style="display:none;"></div>
+        <div id="successDiv" style="display:none;"></div>
+
+        <div class="demo-box">
+            <h3>Try These Scenarios:</h3>
+            <button onclick="testScenario1()">❌ Test Partial Selection (Brute Force)</button>
+            <button onclick="testScenario2()">❌ Test Wrong Concepts (Brute Force)</button>
+            <button onclick="testScenario3()">✅ Test Correct Connection</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedConcepts = [];
+        let attempts = 0;
+        let attemptsRemaining = 5;
+        let isOnCooldown = false;
+        let cooldownTime = 0;
+
+        function toggleConcept(concept) {
+            if (isOnCooldown) return;
+            
+            const element = document.querySelector(`[onclick*="${concept}"]`);
+            if (selectedConcepts.includes(concept)) {
+                selectedConcepts = selectedConcepts.filter(c => c !== concept);
+                element.classList.remove('selected');
+            } else {
+                selectedConcepts.push(concept);
+                element.classList.add('selected');
+            }
+            
+            document.getElementById('selectedCount').textContent = selectedConcepts.length;
+        }
+
+        function analyzeConnection(selected) {
+            const correctConcepts = ['probability', 'state', 'superposition', 'entanglement', 'tunneling'];
+            const missing = correctConcepts.filter(concept => !selected.includes(concept));
+            const extra = selected.filter(concept => !correctConcepts.includes(concept));
+            
+            if (missing.length === 0 && extra.length === 0) {
+                return { isCorrect: true, feedback: '' };
+            }
+
+            let feedback = 'Connection analysis: ';
+            if (missing.length > 0) {
+                feedback += `Missing concepts: ${missing.join(', ')}. `;
+            }
+            if (extra.length > 0) {
+                feedback += `Unnecessary concepts: ${extra.join(', ')}. `;
+            }
+            if (selected.length < correctConcepts.length) {
+                feedback += 'Remember: quantum mechanics is interconnected - all fundamental concepts must be unified. ';
+            }
+            
+            return { isCorrect: false, feedback };
+        }
+
+        function attemptConnection() {
+            if (isOnCooldown || attemptsRemaining <= 0) return;
+
+            attempts++;
+            attemptsRemaining--;
+            document.getElementById('attemptsLeft').textContent = attemptsRemaining;
+
+            const analysis = analyzeConnection(selectedConcepts);
+            
+            if (analysis.isCorrect) {
+                document.getElementById('successDiv').innerHTML = 
+                    '<div class="success"><strong>✅ Success!</strong><br>Perfect! All quantum concepts successfully connected. Archive unlocked!</div>';
+                document.getElementById('successDiv').style.display = 'block';
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('feedback').style.display = 'none';
+            } else {
+                document.getElementById('feedback').innerHTML = 
+                    '<div class="feedback"><strong>❌ Connection Analysis</strong><br>' + analysis.feedback + '</div>';
+                document.getElementById('feedback').style.display = 'block';
+                
+                const cooldownDuration = Math.min(5 + (attempts - 1) * 3, 15); // Reduced for demo
+                startCooldown(cooldownDuration);
+                
+                if (attemptsRemaining <= 0) {
+                    document.getElementById('feedback').innerHTML += 
+                        '<div class="cooldown"><strong>🚫 Maximum attempts reached!</strong><br>The quantum field is destabilized. Please reset to try again.</div>';
+                    document.getElementById('resetBtn').style.display = 'inline-block';
+                }
+            }
+        }
+
+        function startCooldown(duration) {
+            isOnCooldown = true;
+            cooldownTime = duration;
+            document.getElementById('connectBtn').disabled = true;
+            
+            updateCooldownDisplay();
+            const interval = setInterval(() => {
+                cooldownTime--;
+                updateCooldownDisplay();
+                
+                if (cooldownTime <= 0) {
+                    clearInterval(interval);
+                    isOnCooldown = false;
+                    document.getElementById('connectBtn').disabled = attemptsRemaining <= 0;
+                    document.getElementById('cooldownDiv').style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function updateCooldownDisplay() {
+            if (cooldownTime > 0) {
+                document.getElementById('cooldownDiv').innerHTML = 
+                    '<div class="cooldown"><strong>⏱️ Quantum Field Cooldown: ' + cooldownTime + 's</strong><br>The quantum field is destabilized. Please wait before attempting another connection.</div>';
+                document.getElementById('cooldownDiv').style.display = 'block';
+            }
+        }
+
+        function resetDemo() {
+            selectedConcepts = [];
+            attempts = 0;
+            attemptsRemaining = 5;
+            isOnCooldown = false;
+            cooldownTime = 0;
+            
+            document.querySelectorAll('.concept').forEach(el => el.classList.remove('selected'));
+            document.getElementById('selectedCount').textContent = '0';
+            document.getElementById('attemptsLeft').textContent = '5';
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('cooldownDiv').style.display = 'none';
+            document.getElementById('successDiv').style.display = 'none';
+        }
+
+        function testScenario1() {
+            resetDemo();
+            ['probability', 'superposition', 'entanglement'].forEach(concept => toggleConcept(concept));
+            setTimeout(() => attemptConnection(), 100);
+        }
+
+        function testScenario2() {
+            resetDemo();
+            ['probability', 'superposition'].forEach(concept => toggleConcept(concept));
+            setTimeout(() => attemptConnection(), 100);
+        }
+
+        function testScenario3() {
+            resetDemo();
+            ['probability', 'state', 'superposition', 'entanglement', 'tunneling'].forEach(concept => toggleConcept(concept));
+            setTimeout(() => attemptConnection(), 100);
+        }
+    </script>
+</body>
+</html>
