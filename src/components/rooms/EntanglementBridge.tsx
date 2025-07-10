@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Wifi, AlertTriangle, CheckCircle, BarChart3, Target, Clock, ArrowRight, BookOpen, Calculator } from 'lucide-react';
+import { Zap, Wifi, AlertTriangle, CheckCircle, BarChart3, Target, Clock, ArrowRight, BookOpen, Calculator, Settings, FlaskConical, TestTube, Trophy } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 
 interface Measurement {
@@ -246,6 +246,94 @@ const EntanglementBridge: React.FC = () => {
             Restore the quantum bridge by proving that entangled particles violate Bell inequalities, 
             demonstrating the mysterious "spooky action at a distance" that Einstein couldn't accept.
           </p>
+        </div>
+
+        {/* Phase Progress Indicator */}
+        <div className="mb-8">
+          <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700 p-6">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-300 mb-3">Experiment Progress</h3>
+              <div className="flex items-center justify-center space-x-4">
+                {[
+                  { phase: 'setup', name: 'Setup', icon: Settings, description: 'Learn the experiment' },
+                  { phase: 'measuring', name: 'Measuring', icon: FlaskConical, description: 'Collect quantum data' },
+                  { phase: 'testing', name: 'Testing', icon: TestTube, description: 'Analyze Bell inequality' },
+                  { phase: 'complete', name: 'Complete', icon: Trophy, description: 'Bridge restored!' }
+                ].map((item, index) => {
+                  const isActive = gamePhase === item.phase;
+                  const isCompleted = ['setup', 'measuring', 'testing', 'complete'].indexOf(gamePhase) > index;
+                  const isCurrent = gamePhase === item.phase;
+                  
+                  return (
+                    <div key={item.phase} className="flex items-center">
+                      <div className={`flex flex-col items-center ${isActive ? 'scale-110' : ''} transition-all duration-300`}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                          isCompleted || isActive
+                            ? gamePhase === 'complete' && item.phase === 'complete'
+                              ? 'bg-green-500 border-green-400 text-white'
+                              : isActive
+                              ? 'bg-blue-500 border-blue-400 text-white animate-pulse'
+                              : 'bg-gray-600 border-gray-500 text-gray-300'
+                            : 'bg-gray-800 border-gray-600 text-gray-500'
+                        }`}>
+                          <item.icon className="w-6 h-6" />
+                        </div>
+                        <div className={`mt-2 text-sm font-medium transition-colors duration-300 ${
+                          isActive 
+                            ? 'text-blue-400' 
+                            : isCompleted 
+                            ? 'text-gray-300' 
+                            : 'text-gray-500'
+                        }`}>
+                          {item.name}
+                        </div>
+                        <div className={`text-xs text-center transition-colors duration-300 ${
+                          isActive 
+                            ? 'text-blue-300' 
+                            : isCompleted 
+                            ? 'text-gray-400' 
+                            : 'text-gray-600'
+                        }`}>
+                          {item.description}
+                        </div>
+                      </div>
+                      {index < 3 && (
+                        <div className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${
+                          ['setup', 'measuring', 'testing', 'complete'].indexOf(gamePhase) > index 
+                            ? 'bg-gray-500' 
+                            : 'bg-gray-700'
+                        }`}></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Current Phase Status */}
+              <div className="mt-4 p-3 rounded-lg bg-blue-900/30 border border-blue-500">
+                <p className="text-blue-300 font-semibold">
+                  {gamePhase === 'setup' && 'Phase 1: Setup - Read the instructions and prepare for the experiment'}
+                  {gamePhase === 'measuring' && 'Phase 2: Measuring - Collect entangled particle measurements'}
+                  {gamePhase === 'testing' && 'Phase 3: Testing - Run Bell inequality analysis'}
+                  {gamePhase === 'complete' && 'Phase 4: Complete - Experiment successful! Bridge restored'}
+                </p>
+                {gamePhase === 'measuring' && measurements.length > 0 && (
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-xs text-blue-200">
+                      <span>Measurements Progress</span>
+                      <span>{measurements.length}/40</span>
+                    </div>
+                    <div className="w-full bg-blue-900/50 rounded-full h-2 mt-1">
+                      <div 
+                        className="bg-blue-400 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min((measurements.length / 40) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Instructions Modal */}
