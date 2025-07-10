@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { BookOpen, Lock, CheckCircle, Zap, Network } from 'lucide-react';
+import { BookOpen, Lock, CheckCircle, Zap, Network, AlertTriangle, RotateCcw } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { Room } from '../../types/game';
 
 interface QuantumConcept {
   id: string;
@@ -17,6 +18,11 @@ const QuantumArchive: React.FC = () => {
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [showAdvancedQuests, setShowAdvancedQuests] = useState(false);
   const [archiveUnlocked, setArchiveUnlocked] = useState(false);
+  const [isOnCooldown, setIsOnCooldown] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [lastAttemptFeedback, setLastAttemptFeedback] = useState<string>('');
+  const [maxAttempts] = useState(5);
+  const [attemptsRemaining, setAttemptsRemaining] = useState(5);
 
   const quantumConcepts: QuantumConcept[] = [
     {
@@ -88,7 +94,26 @@ const QuantumArchive: React.FC = () => {
     }
   ];
 
+  // Cooldown effect
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isOnCooldown && cooldownTime > 0) {
+      interval = setInterval(() => {
+        setCooldownTime(prev => {
+          if (prev <= 1) {
+            setIsOnCooldown(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isOnCooldown, cooldownTime]);
+
   const toggleConceptSelection = (conceptId: string) => {
+    if (isOnCooldown) return;
+    
     setSelectedConcepts(prev => 
       prev.includes(conceptId)
         ? prev.filter(id => id !== conceptId)
@@ -96,21 +121,84 @@ const QuantumArchive: React.FC = () => {
     );
   };
 
-  const attemptConnection = () => {
-    setConnectionAttempts(prev => prev + 1);
-    
-    // Check if the connection logic is correct
-    // The puzzle requires understanding that quantum mechanics is interconnected
-    const correctConnection = selectedConcepts.length === quantumConcepts.length &&
-                             selectedConcepts.includes('probability') &&
-                             selectedConcepts.includes('superposition') &&
-                             selectedConcepts.includes('entanglement');
+  const validateRequiredRooms = () => {
+    const requiredRooms: Room[] = ['probability-bay', 'state-chamber', 'superposition-tower', 'entanglement-bridge', 'tunneling-vault'];
+    return requiredRooms.every(room => gameState.completedRooms.includes(room));
+  };
 
-    if (correctConnection) {
+  const analyzeConnection = (selected: string[]) => {
+    const correctConcepts = ['probability', 'state', 'superposition', 'entanglement', 'tunneling'];
+    const missing = correctConcepts.filter(concept => !selected.includes(concept));
+    const extra = selected.filter(concept => !correctConcepts.includes(concept));
+    
+    if (missing.length === 0 && extra.length === 0) {
+      return { isCorrect: true, feedback: '' };
+    }
+
+    let feedback = 'Connection analysis: ';
+    if (missing.length > 0) {
+      feedback += `Missing concepts: ${missing.join(', ')}. `;
+    }
+    if (extra.length > 0) {
+      feedback += `Unnecessary concepts: ${extra.join(', ')}. `;
+    }
+    if (selected.length < correctConcepts.length) {
+      feedback += 'Remember: quantum mechanics is interconnected - all fundamental concepts must be unified. ';
+    }
+    
+    return { isCorrect: false, feedback };
+  };
+
+  const attemptConnection = () => {
+    if (isOnCooldown || attemptsRemaining <= 0) return;
+
+    const attempts = connectionAttempts + 1;
+    setConnectionAttempts(attempts);
+    setAttemptsRemaining(prev => prev - 1);
+
+    // Verify all prerequisite rooms are completed
+    if (!validateRequiredRooms()) {
+      setLastAttemptFeedback('Error: You must complete all quantum rooms before accessing the archive.');
+      startCooldown(5);
+      return;
+    }
+
+    // Analyze the current connection
+    const analysis = analyzeConnection(selectedConcepts);
+    
+    if (analysis.isCorrect) {
       setArchiveUnlocked(true);
       setShowAdvancedQuests(true);
+      setLastAttemptFeedback('Perfect! All quantum concepts successfully connected. Archive unlocked!');
       completeRoom('quantum-archive');
+    } else {
+      setLastAttemptFeedback(analysis.feedback);
+      
+      // Progressive cooldown based on attempt number
+      const cooldownDuration = Math.min(10 + (attempts - 1) * 5, 30);
+      startCooldown(cooldownDuration);
+      
+      // If max attempts reached, require reset
+      if (attemptsRemaining <= 1) {
+        setLastAttemptFeedback(
+          'Maximum attempts reached. The quantum field is destabilized. Please reset to try again.'
+        );
+      }
     }
+  };
+
+  const startCooldown = (duration: number) => {
+    setIsOnCooldown(true);
+    setCooldownTime(duration);
+  };
+
+  const resetAttempts = () => {
+    setConnectionAttempts(0);
+    setAttemptsRemaining(maxAttempts);
+    setSelectedConcepts([]);
+    setLastAttemptFeedback('');
+    setIsOnCooldown(false);
+    setCooldownTime(0);
   };
 
   const getCompletedRoomsCount = () => {
@@ -193,13 +281,13 @@ const QuantumArchive: React.FC = () => {
                 <div
                   key={concept.id}
                   className={`p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    !isConceptAvailable(concept.id)
+                    !isConceptAvailable(concept.id) || isOnCooldown
                       ? 'opacity-50 cursor-not-allowed border-gray-600 bg-gray-800/30'
                       : selectedConcepts.includes(concept.id)
                       ? 'border-purple-400 bg-purple-900/30'
                       : 'border-gray-600 bg-gray-800/50 hover:bg-gray-700/50'
                   }`}
-                  onClick={() => isConceptAvailable(concept.id) && toggleConceptSelection(concept.id)}
+                  onClick={() => isConceptAvailable(concept.id) && !isOnCooldown && toggleConceptSelection(concept.id)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -220,31 +308,80 @@ const QuantumArchive: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="text-sm text-gray-400">
-                Selected: {selectedConcepts.length}/5 concepts
+              <div className="flex justify-between items-center text-sm text-gray-400">
+                <span>Selected: {selectedConcepts.length}/5 concepts</span>
+                <span className={attemptsRemaining <= 2 ? 'text-red-400' : 'text-gray-400'}>
+                  Attempts remaining: {attemptsRemaining}/{maxAttempts}
+                </span>
               </div>
               
-              <button
-                onClick={attemptConnection}
-                disabled={selectedConcepts.length === 0}
-                className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 
-                         hover:from-indigo-400 hover:to-purple-400 disabled:opacity-50 
-                         disabled:cursor-not-allowed rounded-xl font-semibold text-lg 
-                         transition-all duration-300 transform hover:scale-105"
-              >
-                Connect Quantum Concepts
-              </button>
-
-              {connectionAttempts > 0 && !archiveUnlocked && (
-                <div className="p-4 bg-yellow-900/30 border border-yellow-500 rounded-xl">
-                  <p className="text-yellow-300 font-semibold">Connection Incomplete</p>
-                  <p className="text-yellow-200 text-sm mt-2">
-                    Hint: Quantum mechanics is not a collection of separate phenomena. All quantum 
-                    concepts are fundamentally interconnected. Think about how each concept builds 
-                    upon and relates to the others.
+              {isOnCooldown && (
+                <div className="p-4 bg-red-900/30 border border-red-500 rounded-xl">
+                  <div className="flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2 text-red-400" />
+                    <span className="text-red-300 font-semibold">
+                      Quantum Field Cooldown: {cooldownTime}s
+                    </span>
+                  </div>
+                  <p className="text-red-200 text-sm mt-2">
+                    The quantum field is destabilized. Please wait before attempting another connection.
                   </p>
                 </div>
               )}
+
+              {lastAttemptFeedback && !isOnCooldown && (
+                <div className={`p-4 rounded-xl border ${
+                  archiveUnlocked 
+                    ? 'bg-green-900/30 border-green-500' 
+                    : attemptsRemaining <= 0
+                    ? 'bg-red-900/30 border-red-500'
+                    : 'bg-yellow-900/30 border-yellow-500'
+                }`}>
+                  <p className={`font-semibold ${
+                    archiveUnlocked 
+                      ? 'text-green-300' 
+                      : attemptsRemaining <= 0 
+                      ? 'text-red-300'
+                      : 'text-yellow-300'
+                  }`}>
+                    {archiveUnlocked ? 'Success!' : attemptsRemaining <= 0 ? 'Connection Failed' : 'Connection Analysis'}
+                  </p>
+                  <p className={`text-sm mt-2 ${
+                    archiveUnlocked 
+                      ? 'text-green-200' 
+                      : attemptsRemaining <= 0 
+                      ? 'text-red-200'
+                      : 'text-yellow-200'
+                  }`}>
+                    {lastAttemptFeedback}
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex gap-4">
+                <button
+                  onClick={attemptConnection}
+                  disabled={selectedConcepts.length === 0 || isOnCooldown || attemptsRemaining <= 0 || archiveUnlocked}
+                  className="flex-1 px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 
+                           hover:from-indigo-400 hover:to-purple-400 disabled:opacity-50 
+                           disabled:cursor-not-allowed rounded-xl font-semibold text-lg 
+                           transition-all duration-300 transform hover:scale-105"
+                >
+                  {isOnCooldown ? `Cooldown (${cooldownTime}s)` : 'Connect Quantum Concepts'}
+                </button>
+
+                {(attemptsRemaining <= 0 || connectionAttempts > 0) && !archiveUnlocked && (
+                  <button
+                    onClick={resetAttempts}
+                    disabled={isOnCooldown}
+                    className="px-4 py-4 bg-gray-600 hover:bg-gray-500 disabled:opacity-50 
+                             disabled:cursor-not-allowed rounded-xl font-semibold 
+                             transition-all duration-300 flex items-center"
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
