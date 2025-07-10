@@ -57,10 +57,11 @@ const TunnelingVault: React.FC = () => {
       return;
     }
 
-    // Quantum tunneling case - simplified but realistic calculation
+    // Quantum tunneling case - simplified educational model
+    // Real quantum mechanics uses full Schrödinger equation solutions
     // T ≈ exp(-2κa) where κ = sqrt(2m(V-E))/ℏ
     
-    // Constants (simplified for educational purposes)
+    // Constants (simplified for educational purposes - real calculations much more complex)
     const electronMass = 0.511; // MeV/c² (rest mass energy)
     const hbarC = 0.1973; // eV·nm (ℏc in convenient units)
     
@@ -70,7 +71,7 @@ const TunnelingVault: React.FC = () => {
     // Wave number inside barrier (in nm⁻¹)
     const kappa = Math.sqrt(2 * electronMass * energyDiff) / hbarC;
     
-    // Transmission coefficient
+    // Transmission coefficient (simplified exponential approximation)
     const transmission = Math.exp(-2 * kappa * barrierWidth);
     
     // Convert to percentage and apply realistic scaling
@@ -81,7 +82,8 @@ const TunnelingVault: React.FC = () => {
   };
 
   const generateWaveFunction = () => {
-    // Generate wave function visualization
+    // Generate simplified wave function visualization for educational purposes
+    // Real wavefunctions require solving time-dependent Schrödinger equations
     const points = 200;
     const waveData: number[] = [];
     const xRange = 10; // Total range in nm
@@ -90,20 +92,20 @@ const TunnelingVault: React.FC = () => {
       const x = (i / points) * xRange - xRange/2; // -5 to 5 nm
       let amplitude: number;
       
-      // Wave number for free particle
+      // Wave number for free particle (simplified model)
       const k = Math.sqrt(2 * 0.511 * particleEnergy) / 0.1973; // nm⁻¹
       
       if (x < -barrierWidth/2) {
-        // Before barrier - incident + reflected wave
+        // Before barrier - incident + reflected wave (simplified representation)
         const incident = Math.cos(k * (x + xRange/2));
         const reflected = 0.3 * Math.cos(-k * (x + xRange/2) + Math.PI);
         amplitude = (incident + reflected) * Math.exp(-Math.pow((x + 3), 2) / 8);
       } else if (x > barrierWidth/2) {
-        // After barrier - transmitted wave
+        // After barrier - transmitted wave (educational approximation)
         const transmittedAmplitude = Math.sqrt(transmissionCoefficient);
         amplitude = transmittedAmplitude * Math.cos(k * (x - barrierWidth/2));
       } else {
-        // Inside barrier - exponential decay
+        // Inside barrier - exponential decay (simplified exponential form)
         const kappa = Math.sqrt(2 * 0.511 * (barrierHeight - particleEnergy)) / 0.1973;
         amplitude = Math.exp(-kappa * Math.abs(x)) * 0.7;
       }
@@ -246,6 +248,9 @@ const TunnelingVault: React.FC = () => {
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
             Master the final quantum concept: quantum tunneling. Adjust the energy barrier parameters 
             to create a path through the classically impenetrable wall using the mysterious power of quantum mechanics.
+            <span className="text-sm text-gray-400 block mt-2">
+              🎓 <em>Using simplified educational physics models to demonstrate core concepts</em>
+            </span>
           </p>
         </div>
 
@@ -279,14 +284,18 @@ const TunnelingVault: React.FC = () => {
                 </div>
                 
                 <div className="bg-blue-900/30 border border-blue-500 rounded-xl p-4">
-                  <h3 className="font-semibold text-blue-300 mb-2">🔬 The Physics</h3>
+                  <h3 className="font-semibold text-blue-300 mb-2">🔬 The Physics (Educational Model)</h3>
                   <p className="text-blue-200 text-sm mb-2">
-                    <strong>Tunneling Formula:</strong> T = e^(-2κa) where κ = √(2m(V-E))/ℏ
+                    <strong>Simplified Tunneling Formula:</strong> T = e^(-2κa) where κ = √(2m(V-E))/ℏ
                   </p>
-                  <p className="text-blue-200 text-sm">
+                  <p className="text-blue-200 text-sm mb-2">
                     Lower barriers, thinner walls, and higher particle energy all increase tunneling probability. 
                     Even with low probability, quantum mechanics makes the impossible possible!
                   </p>
+                  <div className="text-blue-300 text-xs mt-2 p-2 bg-blue-800/20 rounded border border-blue-600">
+                    <strong>📚 Educational Note:</strong> This uses a simplified 1D rectangular barrier model for learning. 
+                    Real quantum tunneling involves complex wavefunctions, varying potentials, and advanced mathematical treatments.
+                  </div>
                 </div>
 
                 <div className="bg-green-900/30 border border-green-500 rounded-xl p-4">
@@ -329,12 +338,13 @@ const TunnelingVault: React.FC = () => {
             <div className="bg-gray-900/95 rounded-2xl border border-blue-500 max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto">
               <div className="text-center mb-6">
                 <Calculator className="w-8 h-8 mx-auto text-blue-400 mb-4" />
-                <h2 className="text-2xl font-bold text-blue-400 mb-4">Quantum Tunneling Physics</h2>
+                <h2 className="text-2xl font-bold text-blue-400 mb-4">Quantum Tunneling Physics Guide</h2>
+                <p className="text-sm text-blue-300">Educational model for learning quantum concepts</p>
               </div>
               
               <div className="space-y-6">
                 <div className="bg-blue-900/30 border border-blue-500 rounded-xl p-4">
-                  <h3 className="font-semibold text-blue-300 mb-3">🧮 Tunneling Probability Formula</h3>
+                  <h3 className="font-semibold text-blue-300 mb-3">🧮 Simplified Tunneling Formula (Educational)</h3>
                   <div className="space-y-3 text-sm">
                     <div className="font-mono bg-gray-900/50 p-3 rounded">
                       T = e^(-2κa)
@@ -350,6 +360,13 @@ const TunnelingVault: React.FC = () => {
                       <p><strong>V</strong> = Barrier height</p>
                       <p><strong>E</strong> = Particle energy</p>
                       <p><strong>ℏ</strong> = Reduced Planck constant</p>
+                    </div>
+                    <div className="bg-yellow-800/20 border border-yellow-600 rounded p-3 mt-3">
+                      <p className="text-yellow-200 text-xs">
+                        <strong>⚠️ Educational Simplification:</strong> This 1D rectangular barrier model demonstrates core concepts. 
+                        Real quantum tunneling involves Schrödinger equations, complex wavefunctions, reflection coefficients, 
+                        and multi-dimensional potential landscapes.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -373,12 +390,18 @@ const TunnelingVault: React.FC = () => {
                 </div>
 
                 <div className="bg-green-900/30 border border-green-500 rounded-xl p-4">
-                  <h3 className="font-semibold text-green-300 mb-3">🔬 Real-World Examples</h3>
+                  <h3 className="font-semibold text-green-300 mb-3">🔬 Real-World Quantum Tunneling</h3>
                   <div className="space-y-2 text-sm text-green-200">
                     <p><strong>Nuclear Fusion:</strong> Protons tunnel through Coulomb barriers in stars, enabling fusion at "impossible" temperatures.</p>
                     <p><strong>Electronics:</strong> Tunnel diodes and scanning tunneling microscopes rely on quantum tunneling.</p>
                     <p><strong>Radioactive Decay:</strong> Alpha particles tunnel out of atomic nuclei, causing radioactive decay.</p>
                     <p><strong>Quantum Computing:</strong> Josephson junctions use tunneling for superconducting qubits.</p>
+                  </div>
+                  <div className="bg-emerald-800/20 border border-emerald-600 rounded p-3 mt-3">
+                    <p className="text-emerald-200 text-xs">
+                      <strong>🎓 Real Physics:</strong> Actual quantum tunneling calculations involve solving time-dependent Schrödinger equations, 
+                      considering wave packet dynamics, decoherence effects, and environmental interactions - far more complex than our educational model!
+                    </p>
                   </div>
                 </div>
 
@@ -421,6 +444,9 @@ const TunnelingVault: React.FC = () => {
             <h2 className="text-2xl font-semibold mb-6 flex items-center">
               <Mountain className="w-6 h-6 mr-3 text-yellow-400" />
               Quantum Energy Barrier
+              <span className="ml-auto text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded">
+                Educational Visualization
+              </span>
             </h2>
 
             {/* Barrier Visualization */}
@@ -622,7 +648,7 @@ const TunnelingVault: React.FC = () => {
 
               {/* Physics Analysis */}
               <div className="p-4 bg-gray-700/50 rounded-xl">
-                <h3 className="font-semibold mb-2">Physics Analysis:</h3>
+                <h3 className="font-semibold mb-2">Physics Analysis (Educational Model):</h3>
                 <div className="text-sm space-y-2">
                   {particleEnergy >= barrierHeight ? (
                     <div className="text-green-400">✓ Classical: Particle has sufficient energy to pass over barrier</div>
@@ -636,6 +662,11 @@ const TunnelingVault: React.FC = () => {
                   
                   <div className="text-blue-400 text-xs mt-2">
                     κ = {(Math.sqrt(2 * 0.511 * Math.max(0.1, barrierHeight - particleEnergy)) / 0.1973).toFixed(2)} nm⁻¹
+                  </div>
+                  
+                  <div className="text-gray-400 text-xs mt-2 p-2 bg-gray-800/50 rounded border border-gray-600">
+                    📚 <strong>Note:</strong> This simplified 1D model demonstrates core principles. Real quantum mechanics involves 
+                    3D wavefunctions, time evolution, and environmental decoherence effects.
                   </div>
                 </div>
               </div>
@@ -761,6 +792,11 @@ const TunnelingVault: React.FC = () => {
                   </div>
                   <div className="mt-3 text-green-400 text-sm">
                     🏆 Achievement Unlocked: Quantum Tunneler
+                  </div>
+                  <div className="mt-2 text-green-300 text-xs p-2 bg-green-800/20 rounded border border-green-600">
+                    📚 <strong>Educational Journey Complete:</strong> You've learned the fundamentals using simplified models. 
+                    Real quantum tunneling research involves advanced mathematics, multi-dimensional analysis, and 
+                    cutting-edge experimental techniques!
                   </div>
                 </div>
               )}
