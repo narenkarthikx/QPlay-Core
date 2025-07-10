@@ -46,21 +46,115 @@ const SuperpositionTower: React.FC = () => {
     { required: [0, 1, 3, 4], description: "Four-pad configuration for maximum quantum coherence" }
   ];
 
-  // Initialize quantum pads for current floor
-  useEffect(() => {
+  // Helper function to generate solvable initial states
+  const generateSolvableState = (floorIndex: number): QuantumPad[] => {
+    const pattern = floorPatterns[floorIndex];
     const newPads: QuantumPad[] = [];
-    const pattern = floorPatterns[currentFloor];
     
     for (let i = 0; i < 5; i++) {
+      const isRequired = pattern.required.includes(i);
+      
+      // For required pads, ensure they have compatible phases for constructive interference
+      let phase = 0;
+      if (isRequired && pattern.required.length > 1) {
+        // Calculate phase to ensure constructive interference in sequence
+        const sequenceIndex = pattern.required.indexOf(i);
+        // Use phases that will result in constructive interference
+        phase = (sequenceIndex * Math.PI / 4) % (2 * Math.PI);
+      } else {
+        // Non-required pads can have random phases
+        phase = Math.random() * 2 * Math.PI;
+      }
+      
       newPads.push({
         id: i,
         state: Math.random() > 0.5 ? 'up' : 'down', // Start with classical states
         locked: false,
-        glowing: pattern.required.includes(i) && showHints,
-        phase: Math.random() * 2 * Math.PI, // Random initial phase
+        glowing: isRequired && showHints,
+        phase: phase,
         amplitude: 1.0
       });
     }
+    
+    return newPads;
+  };
+
+  // Function to validate if current state can reach the target pattern
+  const isStateReachable = (pads: QuantumPad[], targetPattern: number[]): boolean => {
+    // Check if we can create the required superposition states with constructive interference
+    for (let i = 0; i < targetPattern.length - 1; i++) {
+      const pad1Id = targetPattern[i];
+      const pad2Id = targetPattern[i + 1];
+      const pad1 = pads[pad1Id];
+      const pad2 = pads[pad2Id];
+      
+      // Simulate what would happen if both pads were in superposition
+      // Check if their phases would allow constructive interference
+      const phaseDiff = Math.abs(pad1.phase - pad2.phase);
+      const wouldHaveConstructiveInterference = 
+        phaseDiff < Math.PI / 2 || phaseDiff > 3 * Math.PI / 2;
+      
+      if (!wouldHaveConstructiveInterference) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Generate a deterministic solvable state as fallback
+  const generateDeterministicSolvableState = (floorIndex: number): QuantumPad[] => {
+    const pattern = floorPatterns[floorIndex];
+    const newPads: QuantumPad[] = [];
+    
+    for (let i = 0; i < 5; i++) {
+      const isRequired = pattern.required.includes(i);
+      
+      newPads.push({
+        id: i,
+        state: i % 2 === 0 ? 'up' : 'down', // Alternating pattern for determinism
+        locked: false,
+        glowing: isRequired && showHints,
+        phase: isRequired ? 0 : Math.PI / 4, // Ensure constructive interference for required pads
+        amplitude: 1.0
+      });
+    }
+    
+    return newPads;
+  };
+
+  // Check if current pad configuration makes the level impossible
+  const checkForImpossibleState = (): boolean => {
+    const pattern = floorPatterns[currentFloor];
+    return !isStateReachable(quantumPads, pattern.required);
+  };
+
+  // Enhanced error feedback with impossible state detection
+  const handleImpossibleState = () => {
+    setLastError('⚠️ Current configuration detected as impossible! The quantum phases prevent the required interference pattern. Generating new solvable state...');
+    setTimeout(() => {
+      resetPath();
+    }, 2000);
+  };
+
+  // Initialize quantum pads for current floor
+  useEffect(() => {
+    let newPads: QuantumPad[];
+    const pattern = floorPatterns[currentFloor];
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    // Try to generate a solvable state, with fallback to guaranteed solvable configuration
+    do {
+      newPads = generateSolvableState(currentFloor);
+      attempts++;
+    } while (!isStateReachable(newPads, pattern.required) && attempts < maxAttempts);
+    
+    // If we couldn't generate a random solvable state, use a deterministic one
+    if (attempts >= maxAttempts) {
+      console.warn(`Could not generate random solvable state for floor ${currentFloor + 1}, using deterministic configuration`);
+      newPads = generateDeterministicSolvableState(currentFloor);
+    }
+    
     setQuantumPads(newPads);
     setSelectedPath([]);
     setPathSegments([]);
@@ -259,16 +353,25 @@ const SuperpositionTower: React.FC = () => {
     setDecoherenceTimer(10);
     setInterferencePattern('none');
     setQuantumStateCollapsed(false);
-    setLastError('🔄 Quantum system reset. All superposition states collapsed to classical states.');
+    setLastError('🔄 Quantum system reset with guaranteed solvable configuration.');
     
-    // Reset all pads to classical states
-    setQuantumPads(prev => prev.map(pad => ({
-      ...pad,
-      state: Math.random() > 0.5 ? 'up' : 'down',
-      locked: false,
-      phase: Math.random() * 2 * Math.PI,
-      amplitude: 1.0
-    })));
+    // Generate a new solvable state instead of completely random
+    const pattern = floorPatterns[currentFloor];
+    let newPads: QuantumPad[];
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    do {
+      newPads = generateSolvableState(currentFloor);
+      attempts++;
+    } while (!isStateReachable(newPads, pattern.required) && attempts < maxAttempts);
+    
+    // If we couldn't generate a random solvable state, use a deterministic one
+    if (attempts >= maxAttempts) {
+      newPads = generateDeterministicSolvableState(currentFloor);
+    }
+    
+    setQuantumPads(newPads);
   };
 
   const getPadColor = (pad: QuantumPad) => {
@@ -467,8 +570,39 @@ const SuperpositionTower: React.FC = () => {
                     {interferencePattern === 'none' ? 'None' : interferencePattern}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span>State solvability:</span>
+                  <span className={isStateReachable(quantumPads, floorPatterns[currentFloor].required) ? 'text-green-400' : 'text-red-400'}>
+                    {isStateReachable(quantumPads, floorPatterns[currentFloor].required) ? 'Solvable' : 'Impossible'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total attempts:</span>
+                  <span className="text-gray-400">{attempts}</span>
+                </div>
               </div>
             </div>
+
+            {/* Impossible State Warning */}
+            {checkForImpossibleState() && (
+              <div className="mb-6 p-4 bg-orange-900/30 border border-orange-500 rounded-xl">
+                <div className="flex items-center mb-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-400 mr-2" />
+                  <span className="text-orange-300 font-semibold">IMPOSSIBLE STATE DETECTED</span>
+                </div>
+                <p className="text-orange-200 text-sm mb-3">
+                  The current quantum phase configuration makes the required interference pattern impossible. 
+                  The system needs to be reset to a solvable state.
+                </p>
+                <button
+                  onClick={handleImpossibleState}
+                  className="w-full px-3 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg 
+                           font-semibold transition-all duration-300 text-sm"
+                >
+                  Generate Solvable State
+                </button>
+              </div>
+            )}
 
             {/* Hint System */}
             <div className="mb-6">
@@ -515,7 +649,7 @@ const SuperpositionTower: React.FC = () => {
                        font-semibold transition-all duration-300 flex items-center justify-center space-x-2"
             >
               <RefreshCw className="w-4 h-4" />
-              <span>Reset Quantum System</span>
+              <span>Reset to Solvable State</span>
             </button>
           </div>
 
