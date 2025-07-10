@@ -24,6 +24,6 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway link 5af1c36b-b7db-4218-83ad-6ab03d7e4542
-          railway environment set 6fbc7362-8c88-4b38-81e2-477981263abb
-          railway up --service=98fc1867-ee16-4484-bfc5-6ac5e03c4026 --ci
+          railway up --project=5af1c36b-b7db-4218-83ad-6ab03d7e4542 \
+            --environment=6fbc7362-8c88-4b38-81e2-477981263abb \
+            --service=98fc1867-ee16-4484-bfc5-6ac5e03c4026 --ci
