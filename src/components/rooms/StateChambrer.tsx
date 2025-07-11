@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Compass, Zap, Timer, AlertTriangle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import AICompanion from '../AICompanion';
+import { getRoomConfig, validateTargetState } from '../../hints/roomHints';
 
 // Add global type declarations for Blochy libraries
 declare global {
@@ -56,8 +58,14 @@ const StateChambrer: React.FC = () => {
   const progressRef = useRef<HTMLDivElement>(null);
   const [displayValue, setDisplayValue] = useState(0);
 
-  // Hidden target state (players need to reconstruct this)
-  const targetState: BlochVector = { x: 0.6, y: 0.8, z: 0.2 };
+  // Get target state from config (replaces hardcoded values)
+  const roomConfig = getRoomConfig('state-chamber');
+  const [targetState, setTargetState] = useState<BlochVector>(
+    roomConfig?.targetState || { x: 0.6, y: 0.8, z: 0.2 }
+  );
+  
+  // AI Companion state
+  const [currentTrigger, setCurrentTrigger] = useState<string>('');
 
   // Memoized debounce function to prevent recreation
   const stableDebounce = useMemo(
@@ -104,6 +112,12 @@ const StateChambrer: React.FC = () => {
   
   // Load Blochy scripts and initialize Bloch sphere with proper error handling
   useEffect(() => {
+    // Validate target state and regenerate if needed
+    if (!validateTargetState(targetState)) {
+      console.warn('Invalid target state detected, using default');
+      setTargetState({ x: 0.6, y: 0.8, z: 0.2 });
+    }
+    
     const loadScripts = async () => {
       try {
         // Add CSS for zero-lag slider first
@@ -244,6 +258,12 @@ const StateChambrer: React.FC = () => {
     setMeasurements(prev => ({ ...prev, [axis]: measurement }));
     setMeasurementCount(prev => ({ ...prev, [axis]: prev[axis] + 1 }));
     
+    // Update AI trigger conditions
+    const totalMeasurements = Object.values(measurementCount).reduce((a, b) => a + b, 0) + 1;
+    if (totalMeasurements === 1) {
+      setCurrentTrigger('has_measurements');
+    }
+    
     if (!isActive && (measurementCount.x + measurementCount.y + measurementCount.z) === 0) {
       setIsActive(true);
     }
@@ -267,6 +287,7 @@ const StateChambrer: React.FC = () => {
     
     if (distance < 0.3) {
       setShowDecoherence(true);
+      setCurrentTrigger('decoherence_detected');
     }
   };
 
@@ -292,6 +313,9 @@ const StateChambrer: React.FC = () => {
     if (magnitude > 0.9 && magnitude < 1.1) {
       setRoomCompleted(true);
       completeRoom('state-chamber');
+    } else {
+      // Give feedback for partial success
+      setCurrentTrigger('show_decoherence');
     }
 
     setIsFilterApplying(false);
@@ -628,6 +652,13 @@ const StateChambrer: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* AI Companion */}
+      <AICompanion 
+        roomId="state-chamber"
+        triggerCondition={currentTrigger}
+        onHintShown={(hint) => console.log('Hint shown:', hint.message)}
+      />
     </div>
   );
 };

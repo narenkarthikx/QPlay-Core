@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import AICompanion from '../AICompanion';
 
 const ProbabilityBay: React.FC = () => {
   const { completeRoom } = useGame();
@@ -17,6 +18,9 @@ const ProbabilityBay: React.FC = () => {
   const [showHistogram, setShowHistogram] = useState(false);
   const [decoySolved, setDecoySolved] = useState(false);
   const [roomCompleted, setRoomCompleted] = useState(false);
+  
+  // AI Companion state
+  const [currentTrigger, setCurrentTrigger] = useState<string>('');
 
   const rollQuantumDice = () => {
     if (!rollQuantumDice.weights) {
@@ -306,6 +310,13 @@ const ProbabilityBay: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* AI Companion */}
+      <AICompanion 
+        roomId="probability-bay"
+        triggerCondition={currentTrigger}
+        onHintShown={(hint) => console.log('Hint shown:', hint.message)}
+      />
     </div>
   );
 };

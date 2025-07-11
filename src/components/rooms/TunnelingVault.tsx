@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowRight, AlertTriangle, Mountain, Calculator, BookOpen, Target, BarChart3 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import AICompanion from '../AICompanion';
 
 interface TunnelingAttempt {
   barrierHeight: number;
@@ -30,11 +31,21 @@ const TunnelingVault: React.FC = () => {
   const [showPhysicsGuide, setShowPhysicsGuide] = useState(false);
   const [gamePhase, setGamePhase] = useState<'setup' | 'collapsing' | 'complete'>('setup');
   const [autoOptimize, setAutoOptimize] = useState(false);
+  
+  // AI Companion state
+  const [currentTrigger, setCurrentTrigger] = useState<string>('');
 
   // Calculate tunneling probability using quantum mechanics
   useEffect(() => {
     calculateTunnelingProbability();
     generateWaveFunction();
+    
+    // Update triggers based on probability
+    if (tunnelingProbability < 1) {
+      setCurrentTrigger('very_low_probability');
+    } else if (tunnelingProbability < 5) {
+      setCurrentTrigger('low_probability');
+    }
   }, [barrierHeight, barrierWidth, particleEnergy]);
 
   // Collapse timer
@@ -154,6 +165,7 @@ const TunnelingVault: React.FC = () => {
       }, 2000);
     } else if (attemptCount >= 5) {
       // After 5 failed attempts, give helpful hint
+      setCurrentTrigger('multiple_failures');
       setTimeout(() => {
         resetVault();
       }, 3000);
@@ -768,6 +780,13 @@ const TunnelingVault: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* AI Companion */}
+      <AICompanion 
+        roomId="tunneling-vault"
+        triggerCondition={currentTrigger}
+        onHintShown={(hint) => console.log('Hint shown:', hint.message)}
+      />
     </div>
   );
 };

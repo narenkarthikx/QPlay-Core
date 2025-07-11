@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowUp, ArrowDown, RefreshCw, Lightbulb, Eye, Target, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import AICompanion from '../AICompanion';
 
 interface QuantumPad {
   id: number;
@@ -36,6 +37,9 @@ const SuperpositionTower: React.FC = () => {
   const [interferencePattern, setInterferencePattern] = useState<'constructive' | 'destructive' | 'none'>('none');
   const [quantumStateCollapsed, setQuantumStateCollapsed] = useState(false);
   const [showQuantumAnimation, setShowQuantumAnimation] = useState(false);
+  
+  // AI Companion state
+  const [currentTrigger, setCurrentTrigger] = useState<string>('');
 
   // Floor patterns - each floor has a specific solution
   const floorPatterns = [
@@ -139,6 +143,14 @@ const SuperpositionTower: React.FC = () => {
     // Update quantum clue board
     if (quantumPads[padId].state !== 'superposition') {
       setLastError(`✨ Hadamard transformation applied to Pad ${padId + 1}! Quantum superposition created.`);
+      // Check if we have superposition states now
+      const newPads = quantumPads.map(pad => 
+        pad.id === padId ? { ...pad, state: newState, phase: newPhase, amplitude: newAmplitude } : pad
+      );
+      const hasSuperposition = newPads.some(pad => pad.state === 'superposition');
+      if (hasSuperposition) {
+        setCurrentTrigger('has_superposition');
+      }
     } else {
       setLastError(`📏 Quantum measurement performed on Pad ${padId + 1}! Superposition collapsed to classical state.`);
     }
@@ -153,6 +165,7 @@ const SuperpositionTower: React.FC = () => {
     // Check if pad is in superposition
     if (pad.state !== 'superposition') {
       triggerDecoherence(`❌ Cannot step on classical state! Pad ${padId + 1} is in ${pad.state === 'up' ? '|0⟩' : '|1⟩'} state. Only superposition states can support quantum tunneling.`);
+      setCurrentTrigger('wrong_sequence');
       return;
     }
 
@@ -166,6 +179,7 @@ const SuperpositionTower: React.FC = () => {
     const nextRequiredPad = pattern.required[selectedPath.length];
     if (padId !== nextRequiredPad) {
       triggerDecoherence(`❌ Incorrect sequence! You must step on Pad ${nextRequiredPad + 1} next to maintain quantum coherence.`);
+      setCurrentTrigger('wrong_sequence');
       return;
     }
 
@@ -195,6 +209,7 @@ const SuperpositionTower: React.FC = () => {
         setPathStable(false);
         setDecoherenceTimer(10);
         setLastError('⚠️ Quantum path unstable! Destructive interference detected. Decoherence timer started!');
+        setCurrentTrigger('interference_detected');
       } else {
         setLastError(`✅ Constructive interference achieved! Quantum bridge segment ${newPath.length}/${pattern.required.length} stable.`);
       }
@@ -244,6 +259,11 @@ const SuperpositionTower: React.FC = () => {
     setPathStable(false);
     setLastError(message);
     setAttempts(prev => prev + 1);
+    
+    // Set trigger for multiple failures
+    if (attempts >= 2) {
+      setCurrentTrigger('multiple_failures');
+    }
     
     // Reset after showing decoherence effect
     setTimeout(() => {
@@ -727,6 +747,13 @@ const SuperpositionTower: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* AI Companion */}
+      <AICompanion 
+        roomId="superposition-tower"
+        triggerCondition={currentTrigger}
+        onHintShown={(hint) => console.log('Hint shown:', hint.message)}
+      />
     </div>
   );
 };
