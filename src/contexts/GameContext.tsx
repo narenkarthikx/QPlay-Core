@@ -80,8 +80,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setIsLoadingSession(true);
       
-      // Get the user's most recent session
-      const sessions = await apiService.getGameSessions();
+      // Get the user's most recent session using updated API
+      const sessions = await apiService.getGameSessions(user?.id);
       const currentSession = sessions?.find((session: any) => !session.is_completed);
       
       if (currentSession) {
@@ -111,10 +111,12 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!user) return;
     
     try {
-      const session = await apiService.createGameSession();
-      setCurrentSessionId(session.id);
-      setGameState(initialGameState);
-      setCurrentRoom('probability-bay');
+      const response = await apiService.startGameSession(user.id);
+      if (response.success && response.session) {
+        setCurrentSessionId(response.session.id);
+        setGameState(initialGameState);
+        setCurrentRoom('probability-bay');
+      }
     } catch (error) {
       console.error('Failed to start new session:', error);
     }
@@ -142,31 +144,33 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ? gameState.completedRooms 
           : [...gameState.completedRooms, room];
 
-        const sessionUpdateData = {
-          completed_rooms: updatedRooms,
-          current_room: room,
-          room_times: {
-            ...gameState,
-            [room]: roomTime
-          },
-          room_attempts: {
-            ...roomAttempts,
-            [room]: attempts
-          },
-          room_scores: {
-            [room]: score
-          },
-          total_score: gameState.totalScore + score
+        const roomTimesData = {
+          [room]: roomTime
+        };
+        
+        const roomAttemptsData = {
+          [room]: attempts
+        };
+        
+        const roomScoresData = {
+          [room]: score
         };
 
-        await apiService.updateGameSession(currentSessionId, sessionUpdateData);
+        // Save progress using the correct backend endpoint
+        await apiService.saveGameProgress(
+          currentSessionId,
+          room,
+          roomTimesData,
+          roomAttemptsData,
+          roomScoresData
+        );
         
         // Check for achievements
         await checkAndUnlockAchievements(updatedRooms, gameState.totalScore + score);
         
         // If this was the last room, complete the session and submit to leaderboard
         if (updatedRooms.length >= 6) { // Assuming 6 total rooms
-          await completeSession();
+          await completeSession(updatedRooms.length, gameState.totalScore + score, roomTime);
         }
       } catch (error) {
         console.error('Failed to update session in Supabase:', error);
@@ -174,12 +178,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const completeSession = async () => {
+  const completeSession = async (roomsCompleted: number, totalScore: number, totalTime: number) => {
     if (!user || !currentSessionId) return;
     
     try {
-      await apiService.completeGameSession(currentSessionId);
-      await apiService.submitToLeaderboard(currentSessionId);
+      await apiService.completeGameSession(
+        currentSessionId,
+        user.id,
+        totalTime,
+        totalScore,
+        roomsCompleted,
+        0, // hints used - could be tracked separately
+        'easy' // difficulty - could be stored in session
+      );
       setCurrentSessionId(null);
     } catch (error) {
       console.error('Failed to complete session:', error);
@@ -208,7 +219,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           // Save achievement to Supabase
           try {
-            await apiService.unlockAchievement(check.id, currentSessionId || undefined);
+            await apiService.unlockAchievement(check.id, currentSessionId || undefined, user?.id);
           } catch (error) {
             console.error(`Failed to unlock achievement ${check.id}:`, error);
           }

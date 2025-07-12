@@ -152,28 +152,81 @@ class ApiService {
     });
   }
 
-  // Game Session API calls
-  async createGameSession() {
-    return this.request('/api/game/session', {
-      method: 'POST'
+  // Game Session API calls - Updated to match backend endpoints
+  async startGameSession(userId: string, difficulty: string = 'easy') {
+    return this.request('/api/game/start', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        difficulty: difficulty
+      })
     });
   }
 
-  async updateGameSession(sessionId: string, data: any) {
-    return this.request(`/api/game/session/${sessionId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+  async saveGameProgress(sessionId: string, currentRoom: string, roomTimes: any, roomAttempts: any, roomScores?: any) {
+    return this.request('/api/game/save-progress', {
+      method: 'POST',
+      body: JSON.stringify({
+        session_id: sessionId,
+        current_room: currentRoom,
+        room_times: roomTimes,
+        room_attempts: roomAttempts,
+        room_scores: roomScores
+      })
     });
   }
 
-  async completeGameSession(sessionId: string) {
-    return this.request(`/api/game/session/${sessionId}/complete`, {
-      method: 'POST'
+  async completeGameSession(sessionId: string, userId: string, completionTime: number, totalScore: number, roomsCompleted: number, hintsUsed: number = 0, difficulty: string = 'easy') {
+    return this.request('/api/game/complete', {
+      method: 'POST',
+      body: JSON.stringify({
+        session_id: sessionId,
+        user_id: userId,
+        completion_time: completionTime,
+        total_score: totalScore,
+        rooms_completed: roomsCompleted,
+        hints_used: hintsUsed,
+        difficulty: difficulty
+      })
     });
   }
 
-  async getGameSessions() {
-    return this.request('/api/game/sessions');
+  async getGameSessions(userId?: string) {
+    // For now, we'll access Supabase directly to get sessions
+    // This will need to be updated when backend adds a GET sessions endpoint
+    if (!userId) {
+      console.warn('User ID required to fetch game sessions');
+      return [];
+    }
+    
+    try {
+      // Direct Supabase REST API call to get user's sessions
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.warn('Supabase environment variables not configured');
+        return [];
+      }
+      
+      const response = await fetch(`${supabaseUrl}/rest/v1/game_sessions?user_id=eq.${userId}&order=started_at.desc`, {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        return await response.json();
+      } else {
+        console.error('Failed to fetch game sessions:', response.statusText);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching game sessions:', error);
+      return [];
+    }
   }
 
   // Quantum Physics API calls (unchanged)
@@ -234,12 +287,13 @@ class ApiService {
     });
   }
 
-  async unlockAchievement(achievementId: string, sessionId?: string) {
+  async unlockAchievement(achievementId: string, sessionId?: string, userId?: string) {
     return this.request('/api/achievements/unlock', {
       method: 'POST',
       body: JSON.stringify({
         achievement_id: achievementId,
-        session_id: sessionId
+        session_id: sessionId,
+        user_id: userId
       })
     });
   }

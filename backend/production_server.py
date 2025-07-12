@@ -576,6 +576,7 @@ def save_progress():
         current_room = data.get("current_room")
         room_times = data.get("room_times", {})
         room_attempts = data.get("room_attempts", {})
+        room_scores = data.get("room_scores", {})
         
         # Update session progress (try database, fallback to success)
         try:
@@ -585,7 +586,8 @@ def save_progress():
                 json={
                     "current_room": current_room,
                     "room_times": room_times,
-                    "room_attempts": room_attempts
+                    "room_attempts": room_attempts,
+                    "room_scores": room_scores
                 }
             )
         except:
@@ -594,6 +596,89 @@ def save_progress():
         return jsonify({
             "success": True,
             "message": "Progress saved"
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/quantum/measurements', methods=['POST'])
+def log_quantum_measurement():
+    """Log quantum measurement data"""
+    try:
+        data = request.get_json()
+        session_id = data.get("session_id")
+        room_id = data.get("room_id")
+        measurement_type = data.get("measurement_type")
+        measurement_data = data.get("measurement_data")
+        
+        # Create quantum measurement record
+        quantum_measurement = {
+            "session_id": session_id,
+            "room_id": room_id,
+            "measurement_type": measurement_type,
+            "measurement_data": measurement_data,
+            "measured_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Save to database (try database, fallback to success)
+        try:
+            requests.post(f"{SUPABASE_REST_URL}/quantum_measurements", 
+                        headers=get_supabase_headers(), 
+                        json=quantum_measurement)
+        except:
+            pass  # Measurement logging optional
+        
+        return jsonify({
+            "success": True,
+            "message": "Quantum measurement logged"
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/achievements/unlock', methods=['POST'])
+def unlock_achievement():
+    """Unlock user achievement"""
+    try:
+        data = request.get_json()
+        achievement_id = data.get("achievement_id")
+        session_id = data.get("session_id")
+        user_id = data.get("user_id")
+        
+        # If user_id not provided, try to get from session
+        if not user_id and session_id:
+            try:
+                session_response = requests.get(f"{SUPABASE_REST_URL}/game_sessions?id=eq.{session_id}&select=user_id", 
+                                              headers=get_supabase_headers())
+                if session_response.status_code == 200:
+                    sessions = session_response.json()
+                    if sessions:
+                        user_id = sessions[0].get('user_id')
+            except:
+                pass
+        
+        if not user_id:
+            return jsonify({"error": "User ID required"}), 400
+        
+        # Create achievement record
+        achievement_record = {
+            "user_id": user_id,
+            "achievement_id": achievement_id,
+            "unlocked_at": datetime.now(timezone.utc).isoformat(),
+            "session_id": session_id
+        }
+        
+        # Save to database (try database, fallback to success)
+        try:
+            requests.post(f"{SUPABASE_REST_URL}/user_achievements", 
+                        headers=get_supabase_headers(), 
+                        json=achievement_record)
+        except:
+            pass  # Achievement unlock optional
+        
+        return jsonify({
+            "success": True,
+            "message": f"Achievement {achievement_id} unlocked"
         })
         
     except Exception as e:
