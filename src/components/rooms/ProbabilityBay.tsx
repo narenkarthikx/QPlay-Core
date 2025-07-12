@@ -7,7 +7,7 @@ import { useGame } from '../../contexts/GameContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ProbabilityBay: React.FC = () => {
-  const { completeRoom } = useGame();
+  const { completeRoom, logQuantumMeasurement } = useGame();
 
   const [showTutorial, setShowTutorial] = useState(true);
   const [measurements, setMeasurements] = useState<number[]>([]);
@@ -17,6 +17,8 @@ const ProbabilityBay: React.FC = () => {
   const [showHistogram, setShowHistogram] = useState(false);
   const [decoySolved, setDecoySolved] = useState(false);
   const [roomCompleted, setRoomCompleted] = useState(false);
+  const [roomStartTime] = useState(Date.now());
+  const [attempts, setAttempts] = useState(0);
 
   const rollQuantumDice = () => {
     if (!rollQuantumDice.weights) {
@@ -52,6 +54,13 @@ const ProbabilityBay: React.FC = () => {
 
     setIsRolling(false);
     setShowHistogram(true);
+    
+    // Log quantum measurements to Supabase
+    await logQuantumMeasurement('probability-bay', 'quantum_dice_measurements', {
+      measurements: newMeasurements,
+      measurement_count: newMeasurements.length,
+      timestamp: new Date().toISOString()
+    });
   };
 
   const getDiceIcon = (value: number) => {
@@ -66,7 +75,9 @@ const ProbabilityBay: React.FC = () => {
     return counts;
   };
 
-  const checkLockerCode = () => {
+  const checkLockerCode = async () => {
+    setAttempts(prev => prev + 1);
+    
     const histogramData = getHistogramData();
     const maxCount = Math.max(...histogramData);
     const expectedCode = (histogramData.indexOf(maxCount) + 1).toString();
@@ -75,7 +86,17 @@ const ProbabilityBay: React.FC = () => {
       setDecoySolved(true);
       if (selectedLocker === parseInt(expectedCode)) {
         setRoomCompleted(true);
-        completeRoom('probability-bay');
+        
+        // Calculate completion metrics
+        const completionTime = Date.now() - roomStartTime;
+        const score = Math.max(1000 - (attempts - 1) * 100 - Math.floor(completionTime / 1000), 100);
+        
+        // Complete room with metrics
+        await completeRoom('probability-bay', {
+          time: completionTime,
+          attempts: attempts,
+          score: score
+        });
       }
     }
   };

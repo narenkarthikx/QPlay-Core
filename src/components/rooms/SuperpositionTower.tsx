@@ -18,7 +18,7 @@ interface PathSegment {
 }
 
 const SuperpositionTower: React.FC = () => {
-  const { completeRoom } = useGame();
+  const { completeRoom, logQuantumMeasurement } = useGame();
   const [currentFloor, setCurrentFloor] = useState(0);
   const [playerPosition, setPlayerPosition] = useState(2); // Middle position
   const [quantumPads, setQuantumPads] = useState<QuantumPad[]>([]);
@@ -28,8 +28,9 @@ const SuperpositionTower: React.FC = () => {
   const [showHints, setShowHints] = useState(true);
   const [timeLeft, setTimeLeft] = useState(180); // 3 minutes per floor
   const [gameStarted, setGameStarted] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(true);
+  const [roomStartTime] = useState(Date.now());
   const [attempts, setAttempts] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(true);
   const [lastError, setLastError] = useState('');
   const [pathStable, setPathStable] = useState(true);
   const [decoherenceTimer, setDecoherenceTimer] = useState(10);
@@ -238,15 +239,25 @@ const SuperpositionTower: React.FC = () => {
     }
   };
 
-  const stepOnPad = (padId: number) => {
+  const stepOnPad = async (padId: number) => {
     if (quantumStateCollapsed) return;
     
     const pad = quantumPads[padId];
     const pattern = floorPatterns[currentFloor];
     
+    // Log quantum interaction
+    await logQuantumMeasurement('superposition-tower', 'pad_interaction', {
+      pad_id: padId,
+      pad_state: pad.state,
+      floor: currentFloor,
+      player_position: playerPosition,
+      timestamp: new Date().toISOString()
+    });
+    
     // Check if pad is in superposition
     if (pad.state !== 'superposition') {
       triggerDecoherence(`❌ Cannot step on classical state! Pad ${padId + 1} is in ${pad.state === 'up' ? '|0⟩' : '|1⟩'} state. Only superposition states can support quantum tunneling.`);
+      setAttempts(prev => prev + 1);
       return;
     }
 
@@ -304,9 +315,27 @@ const SuperpositionTower: React.FC = () => {
             setTimeLeft(180); // Reset timer for next floor
           }, 2000);
         } else {
-          setTimeout(() => {
+          setTimeout(async () => {
             setRoomCompleted(true);
-            completeRoom('superposition-tower');
+            
+            // Calculate completion metrics
+            const completionTime = Date.now() - roomStartTime;
+            const score = Math.max(1500 - (attempts * 50) - Math.floor(completionTime / 1000), 200);
+            
+            // Log final quantum state measurement
+            await logQuantumMeasurement('superposition-tower', 'tower_completion', {
+              floors_completed: 5,
+              final_path: selectedPath,
+              completion_time: completionTime,
+              total_attempts: attempts
+            });
+            
+            // Complete room with metrics
+            await completeRoom('superposition-tower', {
+              time: completionTime,
+              attempts: attempts,
+              score: score
+            });
           }, 2000);
         }
       }, 1000);
