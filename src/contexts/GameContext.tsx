@@ -198,8 +198,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         { id: 'persistent_player', condition: Object.values(roomAttempts).some(attempts => attempts >= 3) }
       ];
 
-      // This would typically fetch current achievements from backend
-      // For now, we'll track locally and sync with backend
+      // Check and unlock new achievements
       for (const check of achievementChecks) {
         if (check.condition && !gameState.achievements.includes(check.id)) {
           setGameState(prev => ({
@@ -207,8 +206,12 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             achievements: [...prev.achievements, check.id]
           }));
           
-          // Save achievement to Supabase (achievement system would be implemented in backend)
-          // await apiService.unlockAchievement(check.id, currentSessionId);
+          // Save achievement to Supabase
+          try {
+            await apiService.unlockAchievement(check.id, currentSessionId || undefined);
+          } catch (error) {
+            console.error(`Failed to unlock achievement ${check.id}:`, error);
+          }
         }
       }
     } catch (error) {

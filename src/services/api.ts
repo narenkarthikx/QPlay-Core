@@ -234,6 +234,16 @@ class ApiService {
     });
   }
 
+  async unlockAchievement(achievementId: string, sessionId?: string) {
+    return this.request('/api/achievements/unlock', {
+      method: 'POST',
+      body: JSON.stringify({
+        achievement_id: achievementId,
+        session_id: sessionId
+      })
+    });
+  }
+
   async calculateTunneling(barrierHeight: number, barrierWidth: number, particleEnergy: number) {
     return this.request('/api/quantum/tunneling/calculate', {
       method: 'POST',
