@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, Wifi, AlertTriangle, CheckCircle, BarChart3, Target, Clock, ArrowRight, BookOpen, Calculator, Settings, FlaskConical, TestTube, Trophy } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import QuantumCat from '../QuantumCat';
 
 interface Measurement {
   aliceAngle: number;
@@ -867,6 +868,14 @@ const EntanglementBridge: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Schrödinger's Cat Helper */}
+      <QuantumCat 
+        roomId="entanglement-bridge" 
+        onHintUsed={(level) => {
+          console.log(`Quantum Cat hint used in Entanglement Bridge: Level ${level}`);
+        }}
+      />
     </div>
   );
 };

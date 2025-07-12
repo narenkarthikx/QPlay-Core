@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Compass, Zap, Timer, AlertTriangle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import QuantumCat from '../QuantumCat';
 
 // Add global type declarations for Blochy libraries
 declare global {
@@ -628,6 +629,14 @@ const StateChambrer: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Schrödinger's Cat Helper */}
+      <QuantumCat 
+        roomId="state-chamber" 
+        onHintUsed={(level) => {
+          console.log(`Quantum Cat hint used in State Chamber: Level ${level}`);
+        }}
+      />
     </div>
   );
 };

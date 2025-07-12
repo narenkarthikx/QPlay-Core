@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, Lock, CheckCircle, Zap, Network, AlertTriangle, RotateCcw } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { Room } from '../../types/game';
+import QuantumCat from '../QuantumCat';
 
 interface QuantumConcept {
   id: string;
@@ -464,6 +465,14 @@ return gameState.completedRooms.includes(mappedRoom as Room);
           </div>
         </div>
       </div>
+
+      {/* Schrödinger's Cat Helper */}
+      <QuantumCat 
+        roomId="quantum-archive" 
+        onHintUsed={(level) => {
+          console.log(`Quantum Cat hint used in Quantum Archive: Level ${level}`);
+        }}
+      />
     </div>
   );
 };

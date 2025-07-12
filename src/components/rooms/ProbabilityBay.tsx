@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import QuantumCat from '../QuantumCat';
 
 const ProbabilityBay: React.FC = () => {
   const { completeRoom, logQuantumMeasurement } = useGame();
@@ -327,6 +328,14 @@ const ProbabilityBay: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Schrödinger's Cat Helper */}
+      <QuantumCat 
+        roomId="probability-bay" 
+        onHintUsed={(level) => {
+          console.log(`Quantum Cat hint used in Probability Bay: Level ${level}`);
+        }}
+      />
     </div>
   );
 };

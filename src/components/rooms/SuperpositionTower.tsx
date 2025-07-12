@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowUp, ArrowDown, RefreshCw, Lightbulb, Eye, Target, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import QuantumCat from '../QuantumCat';
 
 interface QuantumPad {
   id: number;
@@ -890,6 +891,14 @@ const SuperpositionTower: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Schrödinger's Cat Helper */}
+      <QuantumCat 
+        roomId="superposition-tower" 
+        onHintUsed={(level) => {
+          console.log(`Quantum Cat hint used: Level ${level}`);
+        }}
+      />
     </div>
   );
 };

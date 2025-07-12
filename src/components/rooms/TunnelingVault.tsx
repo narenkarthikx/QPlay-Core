@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowRight, AlertTriangle, Mountain, Calculator, BookOpen, Target, BarChart3 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import QuantumCat from '../QuantumCat';
 
 interface TunnelingAttempt {
   barrierHeight: number;
@@ -804,6 +805,14 @@ const TunnelingVault: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Schrödinger's Cat Helper */}
+      <QuantumCat 
+        roomId="tunneling-vault" 
+        onHintUsed={(level) => {
+          console.log(`Quantum Cat hint used in Tunneling Vault: Level ${level}`);
+        }}
+      />
     </div>
   );
 };
