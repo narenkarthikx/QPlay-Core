@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Lock, CheckCircle, Zap, Network, AlertTriangle, RotateCcw } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { usePlayerActivityContext } from '../../contexts/PlayerActivityContext';
 import { Room } from '../../types/game';
 
 interface QuantumConcept {
@@ -14,6 +15,7 @@ interface QuantumConcept {
 
 const QuantumArchive: React.FC = () => {
   const { gameState, completeRoom } = useGame();
+  const { markFailure, markSuccess } = usePlayerActivityContext();
   const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [showAdvancedQuests, setShowAdvancedQuests] = useState(false);
@@ -170,9 +172,11 @@ const QuantumArchive: React.FC = () => {
       setArchiveUnlocked(true);
       setShowAdvancedQuests(true);
       setLastAttemptFeedback('Perfect! All quantum concepts successfully connected. Archive unlocked!');
+      markSuccess(); // Trigger cat celebration
       completeRoom('quantum-archive');
     } else {
       setLastAttemptFeedback(analysis.feedback);
+      markFailure(); // Trigger cat failure reaction
       
       // Progressive cooldown based on attempt number
       const cooldownDuration = Math.min(10 + (attempts - 1) * 5, 30);

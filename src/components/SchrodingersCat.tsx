@@ -31,6 +31,33 @@ const SchrodingersCat: React.FC<SchrodingersCatProps> = ({
   // Get dialog for current room
   const roomDialog = (catDialog as any)[currentRoom] || catDialog.general;
 
+  // Simple meow sound effect using Web Audio API
+  const playMeow = useCallback(() => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Create a meow-like sound
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+      oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.2);
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (error) {
+      // Silently fail if Web Audio API is not supported
+      console.log('Audio not supported');
+    }
+  }, []);
+
   // Cat sprite variations (using CSS for now, could be replaced with actual sprites)
   const getCatSprite = () => {
     switch (behavior) {
@@ -189,13 +216,14 @@ const SchrodingersCat: React.FC<SchrodingersCatProps> = ({
       const randomCelebration = celebrations[Math.floor(Math.random() * celebrations.length)];
       showDialogMessage(randomCelebration);
       setBehavior('jumping');
+      playMeow(); // Celebratory meow
       
       // Move around excitedly
       setTimeout(() => {
         moveToRandomPosition();
       }, 1000);
     }
-  }, [recentSuccess, showDialog, showDialogMessage, moveToRandomPosition]);
+  }, [recentSuccess, showDialog, showDialogMessage, moveToRandomPosition, playMeow]);
 
   // Random behavior changes
   useEffect(() => {
@@ -236,6 +264,7 @@ const SchrodingersCat: React.FC<SchrodingersCatProps> = ({
       const randomHint = hints[Math.floor(Math.random() * hints.length)];
       showDialogMessage(randomHint);
       setBehavior('jumping');
+      playMeow(); // Interactive meow
       onHintRequest?.();
     }
   };
@@ -298,9 +327,14 @@ const SchrodingersCat: React.FC<SchrodingersCatProps> = ({
               </p>
               
               {/* Quantum sparkles effect */}
-              <div className="absolute -top-1 -right-1 text-xs opacity-70">
+              <div className="absolute -top-1 -right-1 text-xs opacity-70 animate-pulse">
                 ✨
               </div>
+              
+              {/* Quantum wave effect when cat is speaking */}
+              {showDialog && (
+                <div className="absolute inset-0 rounded-2xl border-2 border-purple-400/30 animate-ping opacity-30"></div>
+              )}
             </div>
           </motion.div>
         )}

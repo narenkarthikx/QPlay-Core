@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowUp, ArrowDown, RefreshCw, Lightbulb, Eye, Target, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { usePlayerActivityContext } from '../../contexts/PlayerActivityContext';
 
 interface QuantumPad {
   id: number;
@@ -19,6 +20,7 @@ interface PathSegment {
 
 const SuperpositionTower: React.FC = () => {
   const { completeRoom, logQuantumMeasurement } = useGame();
+  const { markFailure, markSuccess } = usePlayerActivityContext();
   const [currentFloor, setCurrentFloor] = useState(0);
   const [playerPosition, setPlayerPosition] = useState(2); // Middle position
   const [quantumPads, setQuantumPads] = useState<QuantumPad[]>([]);
@@ -317,6 +319,7 @@ const SuperpositionTower: React.FC = () => {
         } else {
           setTimeout(async () => {
             setRoomCompleted(true);
+            markSuccess(); // Trigger cat celebration
             
             // Calculate completion metrics
             const completionTime = Date.now() - roomStartTime;
@@ -367,6 +370,7 @@ const SuperpositionTower: React.FC = () => {
     setPathStable(false);
     setLastError(message);
     setAttempts(prev => prev + 1);
+    markFailure(); // Trigger cat failure reaction
     
     // Reset after showing decoherence effect
     setTimeout(() => {
