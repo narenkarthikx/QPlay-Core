@@ -214,7 +214,15 @@ const QuantumArchive: React.FC = () => {
       'tunneling': 'tunneling-vault'
     };
     
-    return gameState.completedRooms.includes(roomMapping[conceptId as keyof typeof roomMapping]);
+// Safely map concept ID to its corresponding room.
+// If the concept doesn't exist in the mapping, return false to avoid passing undefined.
+// This prevents TypeScript errors and runtime bugs when checking completedRooms.
+const mappedRoom = roomMapping[conceptId as keyof typeof roomMapping];
+if (!mappedRoom) return false;
+
+return gameState.completedRooms.includes(mappedRoom as Room);
+
+    // return gameState.completedRooms.includes(roomMapping[conceptId as keyof typeof roomMapping]); -- causing error : Argument of type 'string' is not assignable to parameter of type 'Room'.
   };
 
   return (
