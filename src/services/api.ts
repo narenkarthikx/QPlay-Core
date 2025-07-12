@@ -222,6 +222,18 @@ class ApiService {
     return this.request('/api/quantum/entanglement/optimal-angles');
   }
 
+  async logQuantumMeasurement(sessionId: string, roomId: string, measurementType: string, measurementData: any) {
+    return this.request('/api/quantum/measurements', {
+      method: 'POST',
+      body: JSON.stringify({
+        session_id: sessionId,
+        room_id: roomId,
+        measurement_type: measurementType,
+        measurement_data: measurementData
+      })
+    });
+  }
+
   async calculateTunneling(barrierHeight: number, barrierWidth: number, particleEnergy: number) {
     return this.request('/api/quantum/tunneling/calculate', {
       method: 'POST',
