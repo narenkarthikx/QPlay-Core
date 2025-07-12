@@ -1,0 +1,73 @@
+{
+  "probability-bay": {
+    "entry": "Welcome to my probabilistic playground! 🎲 The odds are... uncertain.",
+    "hint_1": "Quantum probabilities aren't just guesses - they're fundamental reality.",
+    "hint_2": "Think of me as both helpful AND not helpful until you observe my advice.",
+    "hint_3": "Probability amplitudes can interfere - just like my moods!",
+    "solved": "Purr-fect! You've collapsed the uncertainty into success! 🐾",
+    "idle_30s": "Feeling stuck? Remember, in quantum mechanics, all possibilities exist until measured.",
+    "idle_60s": "I once got stuck in a probability box myself. The trick is not to overthink it.",
+    "failure": "Don't worry, every measurement teaches us something. Even failed ones!"
+  },
+  "state-chamber": {
+    "entry": "Ah, the State Chamber! Where quantum states come to... exist? 🤔",
+    "hint_1": "Every quantum state has its own personality - like cats!",
+    "hint_2": "Pure states are like me when I'm definitely napping. Mixed states... well, that's complicated.",
+    "hint_3": "State vectors live in Hilbert space - it's roomier than this chamber!",
+    "solved": "You've mastered quantum states! Even Schrödinger would be impressed. 😸",
+    "idle_30s": "State preparation is an art. Think of it like arranging the perfect nap spot.",
+    "idle_60s": "Sometimes the most elegant solution is the simplest state. Like sleeping.",
+    "failure": "Quantum states can be tricky. Don't worry, I've been in uncertain states myself!"
+  },
+  "superposition-tower": {
+    "entry": "The Superposition Tower! Where I truly belong - existing in all states at once! ✨",
+    "hint_1": "Superposition isn't about being indecisive - it's about being everything at once.",
+    "hint_2": "Hadamard gates create superposition. Think of them as quantum coin flips.",
+    "hint_3": "Coherence is key - lose it and your superposition collapses faster than a house of cards.",
+    "solved": "Magnificent! You've built a quantum superposition worthy of my approval! 🏗️",
+    "idle_30s": "I'm currently in a superposition of wanting food AND not wanting food.",
+    "idle_60s": "Balance is everything in superposition. Too much of anything and *poof* - collapse!",
+    "failure": "Superposition takes practice. Even I sometimes collapse into just being a regular cat."
+  },
+  "entanglement-bridge": {
+    "entry": "Welcome to the Entanglement Bridge! Where distant things affect each other instantly! 🌉",
+    "hint_1": "Entanglement is spooky action at a distance. Einstein found it troubling - I find it purr-plexing.",
+    "hint_2": "Bell states are maximally entangled. Like me and my food bowl - inseparable!",
+    "hint_3": "Measuring one entangled particle instantly affects its partner. It's quantum telepathy!",
+    "solved": "You've bridged the quantum divide! Even Einstein would have to admit that was impressive. 🔬",
+    "idle_30s": "Quantum entanglement is like having a quantum twin. Creepy but useful!",
+    "idle_60s": "Non-locality bothered Einstein, but I think it's rather convenient for a cat.",
+    "failure": "Entanglement can be fragile. Handle with care - like a sleeping cat."
+  },
+  "tunneling-vault": {
+    "entry": "The Tunneling Vault! Where particles do the impossible - just like cats squeezing through tiny spaces! 🕳️",
+    "hint_1": "Quantum tunneling lets particles pass through barriers. Like me passing through closed doors!",
+    "hint_2": "The barrier doesn't disappear - the wave function just... finds a way.",
+    "hint_3": "Tunneling probability depends on barrier width and height. Thin barriers are easier to pierce.",
+    "solved": "You've tunneled to success! That barrier didn't stand a chance! 🎯",
+    "idle_30s": "I've mastered classical tunneling - under beds, through cat flaps, you name it.",
+    "idle_60s": "Quantum tunneling happens everywhere. Even in my dreams, I tunnel through probability space.",
+    "failure": "Not every tunneling attempt succeeds. Sometimes you just have to try a different path."
+  },
+  "quantum-archive": {
+    "entry": "The Quantum Archive! Where all quantum knowledge is stored in superposition! 📚",
+    "hint_1": "Quantum information is special - it can't be cloned, but it can be teleported!",
+    "hint_2": "This archive contains every quantum possibility that ever was or could be.",
+    "hint_3": "Quantum algorithms like Grover's search can find needles in haystacks faster than classical methods.",
+    "solved": "You've unlocked the secrets of the Quantum Archive! Knowledge is power! 🔓",
+    "idle_30s": "All quantum knowledge exists here simultaneously. It's like a library in superposition.",
+    "idle_60s": "I once tried to measure all the quantum information at once. The decoherence gave me a headache.",
+    "failure": "The archive's knowledge is vast. Sometimes it takes multiple attempts to find what you need."
+  },
+  "general": {
+    "celebrate": ["Quantum-tastic! 🎉", "Purr-fect solution! 😸", "That's some serious quantum physics! 🔬", "Schrödinger would be proud! 👨‍🔬"],
+    "encourage": ["Don't give up! Even I had to learn quantum mechanics! 💪", "Every expert was once a beginner! 🌱", "Quantum mechanics is hard - that's what makes it interesting! 🧠"],
+    "random_facts": [
+      "Did you know I exist in a superposition of sleeping and not sleeping right now?",
+      "Quantum entanglement works faster than light - but don't tell Einstein!",
+      "My favorite quantum number is 'meow' - it's imaginary but very real to me.",
+      "Heisenberg's uncertainty principle explains why I can't decide where to sit.",
+      "Quantum tunneling is how I mysteriously appear in closed rooms."
+    ]
+  }
+}

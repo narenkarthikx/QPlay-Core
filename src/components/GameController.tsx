@@ -8,8 +8,10 @@ import EntanglementBridge from './rooms/EntanglementBridge';
 import TunnelingVault from './rooms/TunnelingVault';
 import QuantumArchive from './rooms/QuantumArchive';
 import RoomSelector from './RoomSelector';
+import SchrodingersCat from './SchrodingersCat';
 import { Room } from '../types/game';
 import PortalTransition from './ui/PortalTransition';
+import { usePlayerActivity } from '../hooks/usePlayerActivity';
 
 interface GameControllerProps {
   onBackToMenu: () => void;
@@ -20,6 +22,7 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   const [showRoomSelector, setShowRoomSelector] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
   const [pendingRoom, setPendingRoom] = useState<Room | null>(null);
+  const playerActivity = usePlayerActivity();
 
   const rooms: Room[] = [
     'probability-bay',
@@ -148,6 +151,18 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
       <main className="flex-1">
         {renderCurrentRoom()}
       </main>
+
+      {/* Schrödinger's Cat Companion */}
+      <SchrodingersCat
+        currentRoom={currentRoom}
+        isRoomCompleted={gameState.completedRooms.includes(currentRoom)}
+        playerIdleTime={playerActivity.idleTime}
+        recentFailure={playerActivity.recentFailure}
+        onHintRequest={() => {
+          // Optional: could trigger additional hint systems
+          console.log('Cat provided hint for', currentRoom);
+        }}
+      />
 
       {/* Room Completion Notification */}
       {gameState.completedRooms.includes(currentRoom) && currentRoomIndex < rooms.length - 1 && (
