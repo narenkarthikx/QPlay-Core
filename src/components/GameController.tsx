@@ -8,6 +8,7 @@ import EntanglementBridge from './rooms/EntanglementBridge';
 import TunnelingVault from './rooms/TunnelingVault';
 import QuantumArchive from './rooms/QuantumArchive';
 import RoomSelector from './RoomSelector';
+import CompanionCat from './CompanionCat';
 import { Room } from '../types/game';
 import PortalTransition from './ui/PortalTransition';
 
@@ -87,6 +88,20 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   return (
     <div className="min-h-screen">
       <PortalTransition show={showPortal} onEnd={handlePortalEnd} />
+      
+      {/* Companion Cat - positioned to avoid UI overlap */}
+      <CompanionCat 
+        safeZones={[
+          // Main content area - avoid header and potential notifications
+          {
+            left: 120,
+            top: 120,
+            right: Math.max(800, window.innerWidth - 300),
+            bottom: Math.max(600, window.innerHeight - 200)
+          }
+        ]}
+      />
+      
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
