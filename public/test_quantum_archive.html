@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Quantum Archive</title>
+</head>
+<body>
+    <h1>Testing Quantum Archive</h1>
+    <button onclick="setupAndTest()">Setup and Test Quantum Archive</button>
+    <div id="output"></div>
+    
+    <script>
+        function setupAndTest() {
+            // Setup localStorage
+            const gameState = {
+                completedRooms: [
+                    'probability-bay',
+                    'state-chamber', 
+                    'superposition-tower',
+                    'entanglement-bridge',
+                    'tunneling-vault'
+                ],
+                currentProgress: 5,
+                achievements: [],
+                totalScore: 500
+            };
+            
+            localStorage.setItem('quantumQuestGameState', JSON.stringify(gameState));
+            localStorage.setItem('quantumQuestCurrentRoom', 'quantum-archive');
+            
+            document.getElementById('output').innerHTML = 'Game state set up. Please refresh the main app.';
+            
+            // Open the main app in a new window
+            window.open('http://localhost:5173/', '_blank');
+        }
+    </script>
+</body>
+</html>
