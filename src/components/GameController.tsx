@@ -11,18 +11,26 @@ import RoomSelector from './RoomSelector';
 import SchrodingersCat from './SchrodingersCat';
 import { Room } from '../types/game';
 import PortalTransition from './ui/PortalTransition';
-import { usePlayerActivity } from '../hooks/usePlayerActivity';
+import { PlayerActivityProvider, usePlayerActivityContext } from '../contexts/PlayerActivityContext';
 
 interface GameControllerProps {
   onBackToMenu: () => void;
 }
 
 const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
+  return (
+    <PlayerActivityProvider>
+      <GameControllerContent onBackToMenu={onBackToMenu} />
+    </PlayerActivityProvider>
+  );
+};
+
+const GameControllerContent: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   const { currentRoom, gameState, setCurrentRoom } = useGame();
+  const playerActivity = usePlayerActivityContext();
   const [showRoomSelector, setShowRoomSelector] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
   const [pendingRoom, setPendingRoom] = useState<Room | null>(null);
-  const playerActivity = usePlayerActivity();
 
   const rooms: Room[] = [
     'probability-bay',
@@ -156,8 +164,6 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
       <SchrodingersCat
         currentRoom={currentRoom}
         isRoomCompleted={gameState.completedRooms.includes(currentRoom)}
-        playerIdleTime={playerActivity.idleTime}
-        recentFailure={playerActivity.recentFailure}
         onHintRequest={() => {
           // Optional: could trigger additional hint systems
           console.log('Cat provided hint for', currentRoom);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Room } from '../types/game';
+import { usePlayerActivityContext } from '../contexts/PlayerActivityContext';
 import catDialog from '../data/catDialog.json';
 
 type CatBehavior = 'idle' | 'walking' | 'sitting' | 'jumping' | 'observing' | 'sleeping';
@@ -9,18 +10,15 @@ type CatPosition = { x: number; y: number };
 interface SchrodingersCatProps {
   currentRoom: Room;
   isRoomCompleted: boolean;
-  playerIdleTime: number; // in seconds
-  recentFailure: boolean;
   onHintRequest?: () => void;
 }
 
 const SchrodingersCat: React.FC<SchrodingersCatProps> = ({
   currentRoom,
   isRoomCompleted,
-  playerIdleTime,
-  recentFailure,
   onHintRequest
 }) => {
+  const { idleTime: playerIdleTime, recentFailure, recentSuccess } = usePlayerActivityContext();
   const [behavior, setBehavior] = useState<CatBehavior>('idle');
   const [position, setPosition] = useState<CatPosition>({ x: 20, y: 80 });
   const [currentDialog, setCurrentDialog] = useState<string>('');
@@ -183,6 +181,21 @@ const SchrodingersCat: React.FC<SchrodingersCatProps> = ({
       }));
     }
   }, [recentFailure, roomDialog.failure, showDialog, showDialogMessage]);
+
+  // Handle recent success
+  useEffect(() => {
+    if (recentSuccess && !showDialog) {
+      const celebrations = catDialog.general.celebrate;
+      const randomCelebration = celebrations[Math.floor(Math.random() * celebrations.length)];
+      showDialogMessage(randomCelebration);
+      setBehavior('jumping');
+      
+      // Move around excitedly
+      setTimeout(() => {
+        moveToRandomPosition();
+      }, 1000);
+    }
+  }, [recentSuccess, showDialog, showDialogMessage, moveToRandomPosition]);
 
   // Random behavior changes
   useEffect(() => {

@@ -4,10 +4,12 @@ import {
   BarChart3, Lock, Unlock
 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { usePlayerActivityContext } from '../../contexts/PlayerActivityContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ProbabilityBay: React.FC = () => {
   const { completeRoom, logQuantumMeasurement } = useGame();
+  const { markFailure, markSuccess } = usePlayerActivityContext();
 
   const [showTutorial, setShowTutorial] = useState(true);
   const [measurements, setMeasurements] = useState<number[]>([]);
@@ -86,6 +88,7 @@ const ProbabilityBay: React.FC = () => {
       setDecoySolved(true);
       if (selectedLocker === parseInt(expectedCode)) {
         setRoomCompleted(true);
+        markSuccess(); // Trigger cat celebration
         
         // Calculate completion metrics
         const completionTime = Date.now() - roomStartTime;
@@ -97,7 +100,13 @@ const ProbabilityBay: React.FC = () => {
           attempts: attempts,
           score: score
         });
+      } else {
+        // Correct code but wrong locker (decoy)
+        markFailure();
       }
+    } else {
+      // Wrong code entirely
+      markFailure();
     }
   };
 
