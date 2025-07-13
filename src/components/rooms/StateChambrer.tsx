@@ -79,11 +79,10 @@ const StateChambrer: React.FC = () => {
   const targetState: BlochVector = { x: 0.6, y: 0.8, z: 0.2 };
 
   // Memoized debounce function to prevent recreation
-  const stableDebounce = useMemo(
-    () =>
-      debounce((value: number) => {
-        setNoiseFilter(value);
-      }, 16), // ~60fps updates
+  const stableDebounce = useCallback(
+    debounce((value: number) => {
+      setNoiseFilter(value);
+    }, 100), // Reduced frequency for better performance
     [],
   );
 
@@ -93,17 +92,7 @@ const StateChambrer: React.FC = () => {
       const value = parseFloat(e.target.value);
 
       // Use requestAnimationFrame for smooth visual updates
-      requestAnimationFrame(() => {
-        // Direct DOM manipulation for immediate visual feedback
-        if (progressRef.current) {
-          progressRef.current.style.width = `${value * 100}%`;
-        }
-
-        // Update display value immediately for UI feedback
-        setDisplayValue(value);
-      });
-
-      // Debounced state update for React logic
+      setDisplayValue(value);
       stableDebounce(value);
     },
     [stableDebounce],
@@ -262,22 +251,22 @@ const StateChambrer: React.FC = () => {
     };
   }, []);
 
-  const performMeasurement = (axis: "x" | "y" | "z") => {
-    if (measurementCount[axis] >= 3) return;
+  const performMeasurement = useCallback(
+    (axis: "x" | "y" | "z") => {
+      if (measurementCount[axis] >= 3) return;
 
-    const noise = (Math.random() - 0.5) * 0.2;
-    const measurement = targetState[axis] + noise;
+      const noise = (Math.random() - 0.5) * 0.2;
+      const measurement = targetState[axis] + noise;
 
-    setMeasurements((prev) => ({ ...prev, [axis]: measurement }));
-    setMeasurementCount((prev) => ({ ...prev, [axis]: prev[axis] + 1 }));
+      setMeasurements((prev) => ({ ...prev, [axis]: measurement }));
+      setMeasurementCount((prev) => ({ ...prev, [axis]: prev[axis] + 1 }));
 
-    if (
-      !isActive &&
-      measurementCount.x + measurementCount.y + measurementCount.z === 0
-    ) {
-      setIsActive(true);
-    }
-  };
+      if (!isActive) {
+        setIsActive(true);
+      }
+    },
+    [isActive],
+  );
 
   const reconstructState = () => {
     const reconstructed: BlochVector = {
@@ -416,9 +405,9 @@ const StateChambrer: React.FC = () => {
         {showTutorial && (
           <motion.div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, pointerEvents: "none" }}
+            animate={{ opacity: 1, pointerEvents: "auto" }}
+            exit={{ opacity: 0, pointerEvents: "none" }}
           >
             <motion.div
               initial={{ y: 80, opacity: 0 }}
@@ -481,10 +470,14 @@ const StateChambrer: React.FC = () => {
               </div>
 
               <button
-                onClick={() => setShowTutorial(false)}
-                className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
+                onClick={() => {
+                  setShowTutorial(false);
+                }}
+                className="w-full px-6 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
               >
-                Begin Quantum Analysis!
+                <span className="block w-full h-full text-center">
+                  Begin Quantum Analysis!
+                </span>
               </button>
             </motion.div>
           </motion.div>
