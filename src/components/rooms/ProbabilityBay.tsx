@@ -320,7 +320,7 @@ const ProbabilityBay: React.FC = () => {
                   onClick={() => setSelectedLocker(locker)}
                   className={`p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
                     selectedLocker === locker
-                      ? "border-4 border-blue-400 bg-blue-100 shadow-xl ring-2 ring-blue-300 ring-offset-2 animate-pulse"
+                      ? "border-4 border-blue-400 bg-blue-100 shadow-xl ring-2 ring-blue-300 ring-offset-2 animate-pulse text-black"
                       : "border-gray-600 bg-gray-800/50 hover:bg-gray-700/50"
                   }`}
                 >
@@ -337,13 +337,20 @@ const ProbabilityBay: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <input
-                type="text"
+              <select
                 value={lockerCode}
                 onChange={(e) => setLockerCode(e.target.value)}
-                placeholder="Enter the quantum code..."
                 className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl focus:border-blue-400 focus:outline-none transition-colors duration-200"
-              />
+              >
+                <option value="" disabled>
+                  Select a quantum code...
+                </option>
+                {[1, 2, 3, 4, 5, 6].map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
 
               <button
                 onClick={checkLockerCode}
