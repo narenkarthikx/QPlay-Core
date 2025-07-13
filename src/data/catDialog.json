@@ -2,9 +2,9 @@
   "probability-bay": {
     "entry": {
       "messages": [
-        "Purr... *sniffs quantum dice* Welcome to Probability Bay! I'm Schrödinger, your quantum companion!",
+        "Meow! These dice remind me of my famous box experiment. Shall we discover probability together?",
         "*stretches paws* Ah, the sweet uncertainty of quantum measurements! Ready to explore?",
-        "Meow! These dice remind me of my famous box experiment. Shall we discover probability together?"
+        "Purr... *sniffs quantum dice* Welcome to Probability Bay! I'm Schrödinger, your quantum companion!"
       ],
       "educationalFacts": [
         "Did you know? Quantum dice can show true randomness, unlike classical dice!",
@@ -14,8 +14,8 @@
     },
     "idle": {
       "messages": [
-        "*sits and observes the dice* Take your time to understand the measurements...",
         "*tail swishes thoughtfully* Each roll reveals a piece of quantum truth.",
+        "*sits and observes the dice* Take your time to understand the measurements...",
         "*purrs softly* Watch how the histogram builds - it's like watching reality unfold!"
       ],
       "stories": [
@@ -24,10 +24,31 @@
         "Quantum mechanics taught me that curiosity doesn't kill the cat - uncertainty keeps us alive!"
       ]
     },
+    "onMeasure": {
+      "messages": [
+        "That's a lot of quantum uncertainty. Let's check the distribution.",
+        "*ears perk up* Excellent! Now we'll see quantum randomness in action!",
+        "*whiskers twitch excitedly* Watch the histogram grow - each roll is unique yet part of a pattern!"
+      ]
+    },
+    "onFail": {
+      "messages": [
+        "Hmm... try the highest frequency bar.",
+        "*gentle meow* Don't worry. Quantum learning takes time. Focus on the highest frequency.",
+        "*nuzzles encouragingly* Look for the tallest bar - it shows the dominant outcome!"
+      ]
+    },
+    "onSuccess": {
+      "messages": [
+        "Yes! You've stabilized the outcome!",
+        "*celebrates with quantum purrs* The uncertainty principle bows to your understanding!",
+        "*happy dance* Magnificent! You've mastered quantum probability!"
+      ]
+    },
     "stuck": {
       "messages": [
+        "Need help cracking this? Try observing the frequency peaks.",
         "*meows encouragingly* Don't worry! Even Einstein struggled with quantum randomness.",
-        "*nuzzles your hand* Look for patterns in the chaos - that's the quantum way!",
         "*purrs* Remember: the most frequent outcome holds the key to your escape!"
       ],
       "hints": [
@@ -45,8 +66,8 @@
     },
     "hint": {
       "messages": [
-        "*whiskers twitch with wisdom* The secret lies in statistical analysis, dear human!",
-        "*points with paw* Count the occurrences - quantum truth emerges from repetition!"
+        "The highest bar shows the most probable outcome — aim for that in the lockers!",
+        "*whiskers twitch with wisdom* The secret lies in statistical analysis, dear human!"
       ]
     }
   },
@@ -73,6 +94,27 @@
         "I once met an electron who was uncertain about which orbital to call home!",
         "My quantum dreams involve floating through energy levels like a spectral phantom.",
         "Did you know cats naturally understand superposition? We're experts at being everywhere at once!"
+      ]
+    },
+    "onMeasure": {
+      "messages": [
+        "*ears perk up* Interesting choice! Let's see how the quantum states respond.",
+        "*whiskers twitch* The electrons are rearranging their energy patterns!",
+        "*watches intently* Observe how the orbitals reshape with your decision!"
+      ]
+    },
+    "onFail": {
+      "messages": [
+        "*gentle head bump* State transitions can be tricky! Think about energy relationships.",
+        "*meows supportively* Remember: electrons prefer the lowest available energy state.",
+        "*nuzzles* Don't worry - even quantum particles sometimes choose the wrong orbital!"
+      ]
+    },
+    "onSuccess": {
+      "messages": [
+        "*quantum sparkles around me* Brilliant! You've unlocked the secrets of quantum states!",
+        "*celebratory purring* The electrons applaud your mastery of their domain!",
+        "*graceful bow* The energy levels sing in perfect harmony!"
       ]
     },
     "stuck": {

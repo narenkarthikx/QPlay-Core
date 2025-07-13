@@ -7,11 +7,19 @@ import catDialogData from '../data/catDialog.json';
 const CompanionCat: React.FC<CompanionCatProps> = ({
   currentRoom,
   isRoomCompleted,
-  onHintRequest
+  onHintRequest,
+  reactionTriggers
 }) => {
   const [currentAnimation, setCurrentAnimation] = useState<CatAnimation>('idle');
   const [currentMessage, setCurrentMessage] = useState<string>('');
   const [showMessage, setShowMessage] = useState(false);
+  const [behaviorState, setBehaviorState] = useState<CatBehaviorState>('entry');
+  const [lastInteraction, setLastInteraction] = useState(Date.now());
+  const [quantumEffect, setQuantumEffect] = useState(false);
+  const [isLookingAtMouse, setIsLookingAtMouse] = useState(false);
+  const [eyeDirection, setEyeDirection] = useState({ x: 0, y: 0 });
+  const [failureCount, setFailureCount] = useState(0);
+  const [clickMessageIndex, setClickMessageIndex] = useState(0);
   // Per-room positioning system - fixed positions that don't overlap with UI
   const getRoomPosition = useCallback(() => {
     const roomPositions = {
@@ -26,26 +34,89 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     return roomPositions[currentRoom] || { x: 60, y: window.innerHeight - 180 };
   }, [currentRoom]);
 
-  const [behaviorState, setBehaviorState] = useState<CatBehaviorState>('entry');
-  const [lastInteraction, setLastInteraction] = useState(Date.now());
-  const [quantumEffect, setQuantumEffect] = useState(false);
-  const [isLookingAtMouse, setIsLookingAtMouse] = useState(false);
-  const [eyeDirection, setEyeDirection] = useState({ x: 0, y: 0 });
-
   // Get dialog data for current room and state
-  const getRoomDialog = useCallback((): CatDialog | null => {
+  const getRoomDialog = useCallback((state?: string): CatDialog | null => {
     const roomData = (catDialogData as any)[currentRoom];
-    if (!roomData || !roomData[behaviorState]) return null;
+    const dialogState = state || behaviorState;
+    if (!roomData || !roomData[dialogState]) return null;
     
     return {
       room: currentRoom,
-      state: behaviorState,
-      messages: roomData[behaviorState].messages || [],
-      hints: roomData[behaviorState].hints || [],
-      educationalFacts: roomData[behaviorState].educationalFacts || [],
-      stories: roomData[behaviorState].stories || []
+      state: dialogState as CatBehaviorState,
+      messages: roomData[dialogState].messages || [],
+      hints: roomData[dialogState].hints || [],
+      educationalFacts: roomData[dialogState].educationalFacts || [],
+      stories: roomData[dialogState].stories || []
     };
   }, [currentRoom, behaviorState]);
+
+  // Reaction trigger handlers
+  useEffect(() => {
+    if (reactionTriggers?.onMeasureClick) {
+      const originalCallback = reactionTriggers.onMeasureClick;
+      reactionTriggers.onMeasureClick = () => {
+        setLastInteraction(Date.now());
+        const dialog = getRoomDialog('onMeasure');
+        if (dialog && dialog.messages.length > 0) {
+          const message = dialog.messages[Math.floor(Math.random() * dialog.messages.length)];
+          setCurrentMessage(message);
+          setShowMessage(true);
+          setCurrentAnimation('looking');
+          setTimeout(() => setShowMessage(false), 3000);
+          setTimeout(() => setCurrentAnimation('idle'), 2000);
+        }
+        originalCallback();
+      };
+    }
+
+    if (reactionTriggers?.onFailure) {
+      const originalCallback = reactionTriggers.onFailure;
+      reactionTriggers.onFailure = (attempt: number) => {
+        setFailureCount(attempt);
+        setLastInteraction(Date.now());
+        const dialog = getRoomDialog('onFail');
+        if (dialog && dialog.messages.length > 0) {
+          // Escalating help based on failure count
+          let message: string;
+          if (attempt === 1) {
+            message = dialog.messages[0] || "Hmm... try the highest frequency bar.";
+          } else if (attempt >= 3) {
+            message = dialog.messages[2] || "*nuzzles encouragingly* Look for the tallest bar - it shows the dominant outcome!";
+          } else {
+            message = dialog.messages[1] || "*gentle meow* Don't worry. Quantum learning takes time. Focus on the highest frequency.";
+          }
+          
+          setCurrentMessage(message);
+          setShowMessage(true);
+          setCurrentAnimation('looking');
+          setTimeout(() => setShowMessage(false), 4000);
+          setTimeout(() => setCurrentAnimation('idle'), 2000);
+        }
+        originalCallback(attempt);
+      };
+    }
+
+    if (reactionTriggers?.onSuccess) {
+      const originalCallback = reactionTriggers.onSuccess;
+      reactionTriggers.onSuccess = () => {
+        setLastInteraction(Date.now());
+        const dialog = getRoomDialog('onSuccess');
+        if (dialog && dialog.messages.length > 0) {
+          const message = dialog.messages[Math.floor(Math.random() * dialog.messages.length)];
+          setCurrentMessage(message);
+          setShowMessage(true);
+          setCurrentAnimation('celebrating');
+          setQuantumEffect(true);
+          setTimeout(() => setShowMessage(false), 4000);
+          setTimeout(() => {
+            setCurrentAnimation('idle');
+            setQuantumEffect(false);
+          }, 3000);
+        }
+        originalCallback();
+      };
+    }
+  }, [reactionTriggers, getRoomDialog]);
 
   // Mouse tracking for eye movement - use dynamic position
   const handleMouseMove = useCallback((event: MouseEvent) => {
@@ -201,47 +272,56 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     }, 3000);
   }, [getRoomDialog, onHintRequest, isRoomCompleted]);
 
-  // Cat interaction handler
+  // Cat interaction handler with rotating messages
   const handleCatClick = useCallback(() => {
     setLastInteraction(Date.now());
     
     if (behaviorState === 'stuck') {
       handleHintRequest();
     } else {
-      showRandomMessage();
-      setCurrentAnimation('looking');
-      setTimeout(() => setCurrentAnimation('idle'), 2000);
+      // Rotate through 2-3 messages on click
+      const dialog = getRoomDialog();
+      if (dialog && dialog.messages.length > 0) {
+        const maxMessages = Math.min(3, dialog.messages.length);
+        const message = dialog.messages[clickMessageIndex % maxMessages];
+        setCurrentMessage(message);
+        setShowMessage(true);
+        setClickMessageIndex(prev => (prev + 1) % maxMessages);
+        setCurrentAnimation('looking');
+        setTimeout(() => setShowMessage(false), 3500);
+        setTimeout(() => setCurrentAnimation('idle'), 2000);
+      }
     }
-  }, [behaviorState, handleHintRequest, showRandomMessage]);
+  }, [behaviorState, handleHintRequest, getRoomDialog, clickMessageIndex]);
 
-  // Animation variants for stationary, reactive cat - NO positional movement
+  // Animation variants for stationary, reactive cat - very subtle animations
   const catVariants = {
     idle: {
-      scale: [1, 1.02, 1],
-      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+      scale: [1, 1.01, 1],
+      transition: { duration: 6, repeat: Infinity, ease: "easeInOut" }
     },
     sitting: {
-      scale: [1, 0.98, 1],
-      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-    },
-    celebrating: {
-      scale: [1, 1.1, 1],
-      rotate: [0, 3, -3, 0],
-      transition: { duration: 0.6, repeat: 3, ease: "easeInOut" }
-    },
-    sleeping: {
-      scale: [1, 0.95, 1],
-      opacity: [1, 0.9, 1],
+      scale: [1, 0.99, 1],
       transition: { duration: 5, repeat: Infinity, ease: "easeInOut" }
     },
+    celebrating: {
+      scale: [1, 1.05, 1],
+      rotate: [0, 2, -2, 0],
+      transition: { duration: 0.8, repeat: 2, ease: "easeInOut" }
+    },
+    sleeping: {
+      scale: [1, 0.98, 1],
+      opacity: [1, 0.95, 1],
+      transition: { duration: 7, repeat: Infinity, ease: "easeInOut" }
+    },
     looking: {
-      rotate: [0, isLookingAtMouse ? eyeDirection.x * 1 : 2, isLookingAtMouse ? eyeDirection.x * 1 : -2, 0],
-      transition: { duration: 2, ease: "easeInOut" }
+      rotate: [0, isLookingAtMouse ? eyeDirection.x * 0.5 : 1, isLookingAtMouse ? eyeDirection.x * 0.5 : -1, 0],
+      transition: { duration: 1.5, ease: "easeInOut" }
     },
     sniffing: {
-      // Removed y-movement, only scale for breathing effect
-      scale: [1, 1.03, 1],
-      transition: { duration: 1.5, ease: "easeInOut" }
+      // Very subtle breathing effect only
+      scale: [1, 1.02, 1],
+      transition: { duration: 2, ease: "easeInOut" }
     }
   };
 
@@ -360,20 +440,22 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         </div>
       </motion.div>
 
-      {/* Speech Bubble - Dynamic positioning */}
+      {/* Speech Bubble - Enhanced design with width constraint */}
       <AnimatePresence>
         {showMessage && currentMessage && (
           <motion.div
-            className="absolute bg-gray-900/95 backdrop-blur-sm border border-gray-600 rounded-xl p-4 max-w-sm pointer-events-auto"
+            className="absolute bg-gray-900/95 backdrop-blur-sm border border-gray-600 rounded-xl p-3 pointer-events-auto shadow-lg"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             style={{
               left: getRoomPosition().x + 140, // Position to the right of cat
               top: Math.max(getRoomPosition().y - 20, 20),
+              maxWidth: '250px', // User requested 250px max width
+              minWidth: '200px'
             }}
           >
-            <div className="text-sm text-gray-200 leading-relaxed">
+            <div className="text-sm text-gray-200 leading-relaxed font-medium">
               {currentMessage}
             </div>
             

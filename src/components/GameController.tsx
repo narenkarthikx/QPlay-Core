@@ -9,7 +9,7 @@ import TunnelingVault from './rooms/TunnelingVault';
 import QuantumArchive from './rooms/QuantumArchive';
 import RoomSelector from './RoomSelector';
 import CompanionCat from './CompanionCat';
-import { Room } from '../types/game';
+import { Room, CatReactionTriggers } from '../types/game';
 import PortalTransition from './ui/PortalTransition';
 
 interface GameControllerProps {
@@ -52,6 +52,22 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
     console.log(`Hint requested for ${currentRoom}`);
   };
 
+  // Cat reaction triggers for smart behavior
+  const catReactionTriggers = {
+    onMeasureClick: () => {
+      console.log('Cat reacting to measurement action');
+    },
+    onFailure: (attempt: number) => {
+      console.log(`Cat reacting to failure attempt ${attempt}`);
+    },
+    onSuccess: () => {
+      console.log('Cat celebrating success');
+    },
+    onRoomAction: (action: string) => {
+      console.log(`Cat reacting to room action: ${action}`);
+    }
+  };
+
   const goToNextRoom = () => {
     if (canGoNext) {
       setPendingRoom(rooms[currentRoomIndex + 1]);
@@ -77,7 +93,7 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   const renderCurrentRoom = () => {
     switch (currentRoom) {
       case 'probability-bay':
-        return <ProbabilityBay />;
+        return <ProbabilityBay catReactionTriggers={catReactionTriggers} />;
       case 'state-chamber':
         return <StateChambrer />;
       case 'superposition-tower':
@@ -89,7 +105,7 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
       case 'quantum-archive':
         return <QuantumArchive />;
       default:
-        return <ProbabilityBay />;
+        return <ProbabilityBay catReactionTriggers={catReactionTriggers} />;
     }
   };
 
@@ -183,6 +199,7 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
         currentRoom={currentRoom}
         isRoomCompleted={isRoomCompleted}
         onHintRequest={handleHintRequest}
+        reactionTriggers={catReactionTriggers}
       />
     </div>
   );

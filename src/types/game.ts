@@ -53,8 +53,16 @@ export interface CatDialog {
   stories?: string[];
 }
 
+export interface CatReactionTriggers {
+  onMeasureClick?: () => void;
+  onFailure?: (attempt: number) => void;
+  onSuccess?: () => void;
+  onRoomAction?: (action: string) => void;
+}
+
 export interface CompanionCatProps {
   currentRoom: Room;
   isRoomCompleted: boolean;
   onHintRequest: () => void;
+  reactionTriggers?: CatReactionTriggers;
 }

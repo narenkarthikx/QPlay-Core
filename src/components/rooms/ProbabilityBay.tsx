@@ -5,8 +5,13 @@ import {
 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CatReactionTriggers } from '../../types/game';
 
-const ProbabilityBay: React.FC = () => {
+interface ProbabilityBayProps {
+  catReactionTriggers?: CatReactionTriggers;
+}
+
+const ProbabilityBay: React.FC<ProbabilityBayProps> = ({ catReactionTriggers }) => {
   const { completeRoom, logQuantumMeasurement } = useGame();
 
   const [showTutorial, setShowTutorial] = useState(true);
@@ -44,6 +49,9 @@ const ProbabilityBay: React.FC = () => {
     setMeasurements([]);
     rollQuantumDice.weights = null;
     const newMeasurements: number[] = [];
+
+    // Trigger cat reaction for measurement action
+    catReactionTriggers?.onMeasureClick?.();
 
     for (let i = 0; i < 50; i++) {
       await new Promise(resolve => setTimeout(resolve, 40));
@@ -87,6 +95,9 @@ const ProbabilityBay: React.FC = () => {
       if (selectedLocker === parseInt(expectedCode)) {
         setRoomCompleted(true);
         
+        // Trigger cat success reaction
+        catReactionTriggers?.onSuccess?.();
+        
         // Calculate completion metrics
         const completionTime = Date.now() - roomStartTime;
         const score = Math.max(1000 - (attempts - 1) * 100 - Math.floor(completionTime / 1000), 100);
@@ -97,7 +108,13 @@ const ProbabilityBay: React.FC = () => {
           attempts: attempts,
           score: score
         });
+      } else {
+        // Correct code but wrong locker - trigger failure reaction
+        catReactionTriggers?.onFailure?.(attempts);
       }
+    } else {
+      // Wrong code entirely - trigger failure reaction
+      catReactionTriggers?.onFailure?.(attempts);
     }
   };
 
