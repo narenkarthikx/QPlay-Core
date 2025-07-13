@@ -91,7 +91,12 @@ const ProbabilityBay: React.FC = () => {
 
     const histogramData = getHistogramData();
     const maxCount = Math.max(...histogramData);
-    const expectedCode = (histogramData.indexOf(maxCount) + 1).toString();
+    const tiedIndices = histogramData
+      .map((count, index) => (count === maxCount ? index : -1))
+      .filter((index) => index !== -1);
+    const randomIndex =
+      tiedIndices[Math.floor(Math.random() * tiedIndices.length)];
+    const expectedCode = (randomIndex + 1).toString();
 
     if (lockerCode === expectedCode) {
       setDecoySolved(true);
