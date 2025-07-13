@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  Dice1, Dice2, Dice3, Dice4, Dice5, Dice6,
-  BarChart3, Lock, Unlock
-} from 'lucide-react';
-import { useGame } from '../../contexts/GameContext';
-import { motion, AnimatePresence } from 'framer-motion';
+  Dice1,
+  Dice2,
+  Dice3,
+  Dice4,
+  Dice5,
+  Dice6,
+  BarChart3,
+  Lock,
+  Unlock,
+} from "lucide-react";
+import { useGame } from "../../contexts/GameContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ProbabilityBay: React.FC = () => {
   const { completeRoom, logQuantumMeasurement } = useGame();
@@ -13,7 +20,7 @@ const ProbabilityBay: React.FC = () => {
   const [measurements, setMeasurements] = useState<number[]>([]);
   const [isRolling, setIsRolling] = useState(false);
   const [selectedLocker, setSelectedLocker] = useState<number | null>(null);
-  const [lockerCode, setLockerCode] = useState('');
+  const [lockerCode, setLockerCode] = useState("");
   const [showHistogram, setShowHistogram] = useState(false);
   const [decoySolved, setDecoySolved] = useState(false);
   const [roomCompleted, setRoomCompleted] = useState(false);
@@ -24,7 +31,7 @@ const ProbabilityBay: React.FC = () => {
     if (!rollQuantumDice.weights) {
       const rawWeights = Array.from({ length: 6 }, () => Math.random());
       const total = rawWeights.reduce((sum, w) => sum + w, 0);
-      rollQuantumDice.weights = rawWeights.map(w => w / total);
+      rollQuantumDice.weights = rawWeights.map((w) => w / total);
     }
 
     const weights = rollQuantumDice.weights;
@@ -46,7 +53,7 @@ const ProbabilityBay: React.FC = () => {
     const newMeasurements: number[] = [];
 
     for (let i = 0; i < 50; i++) {
-      await new Promise(resolve => setTimeout(resolve, 40));
+      await new Promise((resolve) => setTimeout(resolve, 40));
       const result = rollQuantumDice();
       newMeasurements.push(result);
       setMeasurements([...newMeasurements]);
@@ -54,30 +61,34 @@ const ProbabilityBay: React.FC = () => {
 
     setIsRolling(false);
     setShowHistogram(true);
-    
+
     // Log quantum measurements to Supabase
-    await logQuantumMeasurement('probability-bay', 'quantum_dice_measurements', {
-      measurements: newMeasurements,
-      measurement_count: newMeasurements.length,
-      timestamp: new Date().toISOString()
-    });
+    await logQuantumMeasurement(
+      "probability-bay",
+      "quantum_dice_measurements",
+      {
+        measurements: newMeasurements,
+        measurement_count: newMeasurements.length,
+        timestamp: new Date().toISOString(),
+      },
+    );
   };
 
   const getDiceIcon = (value: number) => {
     const icons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
     const Icon = icons[value - 1];
-    return <Icon className={`w-8 h-8 ${isRolling ? 'animate-bounce' : ''}`} />;
+    return <Icon className={`w-8 h-8 ${isRolling ? "centered-bounce" : ""}`} />;
   };
 
   const getHistogramData = () => {
     const counts = [0, 0, 0, 0, 0, 0];
-    measurements.forEach(m => counts[m - 1]++);
+    measurements.forEach((m) => counts[m - 1]++);
     return counts;
   };
 
   const checkLockerCode = async () => {
-    setAttempts(prev => prev + 1);
-    
+    setAttempts((prev) => prev + 1);
+
     const histogramData = getHistogramData();
     const maxCount = Math.max(...histogramData);
     const expectedCode = (histogramData.indexOf(maxCount) + 1).toString();
@@ -86,16 +97,19 @@ const ProbabilityBay: React.FC = () => {
       setDecoySolved(true);
       if (selectedLocker === parseInt(expectedCode)) {
         setRoomCompleted(true);
-        
+
         // Calculate completion metrics
         const completionTime = Date.now() - roomStartTime;
-        const score = Math.max(1000 - (attempts - 1) * 100 - Math.floor(completionTime / 1000), 100);
-        
+        const score = Math.max(
+          1000 - (attempts - 1) * 100 - Math.floor(completionTime / 1000),
+          100,
+        );
+
         // Complete room with metrics
-        await completeRoom('probability-bay', {
+        await completeRoom("probability-bay", {
           time: completionTime,
           attempts: attempts,
-          score: score
+          score: score,
         });
       }
     }
@@ -103,7 +117,6 @@ const ProbabilityBay: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900/20 to-cyan-900/20 p-6">
-
       {/* 🎓 Tutorial Modal */}
       <AnimatePresence>
         {showTutorial && (
@@ -122,20 +135,27 @@ const ProbabilityBay: React.FC = () => {
             >
               <div className="text-center mb-6">
                 <div className="text-4xl mb-4">🎲</div>
-                <h2 className="text-2xl font-bold text-yellow-400 mb-4">Probability Bay Tutorial</h2>
+                <h2 className="text-2xl font-bold text-yellow-400 mb-4">
+                  Probability Bay Tutorial
+                </h2>
               </div>
 
               <div className="space-y-4 mb-6">
                 <div className="bg-yellow-900/30 border border-yellow-500 rounded-xl p-4">
-                  <h3 className="font-semibold text-yellow-300 mb-2">🔬 The Science</h3>
+                  <h3 className="font-semibold text-yellow-300 mb-2">
+                    🔬 The Science
+                  </h3>
                   <p className="text-yellow-200 text-sm">
-                    In quantum mechanics, outcome probabilities arise from interference. You’ll simulate 50 quantum dice rolls,
-                    then analyze the histogram to identify bias.
+                    In quantum mechanics, outcome probabilities arise from
+                    interference. You’ll simulate 50 quantum dice rolls, then
+                    analyze the histogram to identify bias.
                   </p>
                 </div>
 
                 <div className="bg-purple-900/30 border border-purple-500 rounded-xl p-4">
-                  <h3 className="font-semibold text-purple-300 mb-2">🎮 Step-by-Step</h3>
+                  <h3 className="font-semibold text-purple-300 mb-2">
+                    🎮 Step-by-Step
+                  </h3>
                   <ol className="text-purple-200 text-sm list-decimal list-inside space-y-1">
                     <li>Click “Perform Measurements” to roll 50 times</li>
                     <li>View the histogram of results</li>
@@ -146,9 +166,13 @@ const ProbabilityBay: React.FC = () => {
                 </div>
 
                 <div className="bg-red-900/30 border border-red-500 rounded-xl p-4">
-                  <h3 className="font-semibold text-red-300 mb-2">⚠️ Decoy Warning</h3>
+                  <h3 className="font-semibold text-red-300 mb-2">
+                    ⚠️ Decoy Warning
+                  </h3>
                   <p className="text-red-200 text-sm">
-                    Some lockers accept the right number but are false positives. Only the true quantum locker will complete the room.
+                    Some lockers accept the right number but are false
+                    positives. Only the true quantum locker will complete the
+                    room.
                   </p>
                 </div>
               </div>
@@ -183,10 +207,15 @@ const ProbabilityBay: React.FC = () => {
           </h1>
           <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-purple-900/60 to-blue-900/60 border border-blue-700 shadow-lg">
             <p className="text-base text-blue-200 font-semibold mb-2">
-              <span className="font-orbitron text-lg text-pink-300">Backstory:</span> Dr. Schrödinger’s quantum dice are leaking randomness into the lab!
+              <span className="font-orbitron text-lg text-pink-300">
+                Backstory:
+              </span>{" "}
+              Dr. Schrödinger’s quantum dice are leaking randomness into the
+              lab!
             </p>
             <p className="text-base text-blue-100">
-              Identify and stabilize the dominant probability to prevent quantum collapse.
+              Identify and stabilize the dominant probability to prevent quantum
+              collapse.
             </p>
           </div>
         </div>
@@ -205,16 +234,29 @@ const ProbabilityBay: React.FC = () => {
                 disabled={isRolling}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
               >
-                {isRolling ? 'Measuring Quantum States...' : 'Perform 50 Measurements'}
+                {isRolling
+                  ? "Measuring Quantum States..."
+                  : "Perform 50 Measurements"}
               </button>
             </div>
 
             {measurements.length > 0 && (
               <div className="mb-6">
-                <p className="text-gray-300 mb-4">Measurements: {measurements.length}/50</p>
+                <p className="text-gray-300 mb-4">
+                  Measurements: {measurements.length}/50
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {measurements.slice(-10).map((result, index) => (
-                    <div key={index} className="p-2 bg-gray-700/50 rounded-lg transition-transform duration-200">
+                    <div
+                      key={index}
+                      className="flex items-center justify-center bg-gray-700/50 rounded-lg transition-transform duration-200"
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        minWidth: "48px",
+                        minHeight: "48px",
+                      }}
+                    >
                       {getDiceIcon(result)}
                     </div>
                   ))}
@@ -224,16 +266,18 @@ const ProbabilityBay: React.FC = () => {
 
             {showHistogram && (
               <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-4">Probability Distribution</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Probability Distribution
+                </h3>
                 <div className="space-y-2">
                   {getHistogramData().map((count, index) => {
                     const gradients = [
-                      'from-blue-500 to-cyan-400',
-                      'from-purple-500 to-pink-400',
-                      'from-green-500 to-emerald-400',
-                      'from-yellow-400 to-orange-500',
-                      'from-red-500 to-pink-500',
-                      'from-gray-500 to-gray-300'
+                      "from-blue-500 to-cyan-400",
+                      "from-purple-500 to-pink-400",
+                      "from-green-500 to-emerald-400",
+                      "from-yellow-400 to-orange-500",
+                      "from-red-500 to-pink-500",
+                      "from-gray-500 to-gray-300",
                     ];
                     return (
                       <div key={index} className="flex items-center">
@@ -241,7 +285,9 @@ const ProbabilityBay: React.FC = () => {
                         <div className="flex-1 bg-gray-700 rounded-full h-6 mx-3 relative overflow-hidden">
                           <div
                             className={`h-full transition-all duration-1000 bg-gradient-to-r ${gradients[index]} shadow-md`}
-                            style={{ width: `${(count / Math.max(...getHistogramData())) * 100}%` }}
+                            style={{
+                              width: `${(count / Math.max(...getHistogramData())) * 100}%`,
+                            }}
                           ></div>
                           <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
                             {count}
@@ -263,7 +309,8 @@ const ProbabilityBay: React.FC = () => {
             </h2>
 
             <p className="text-gray-300 mb-6">
-              Analyze the histogram to identify the dominant quantum outcome. Enter the value in the correct locker to stabilize the system.
+              Analyze the histogram to identify the dominant quantum outcome.
+              Enter the value in the correct locker to stabilize the system.
             </p>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
@@ -273,8 +320,8 @@ const ProbabilityBay: React.FC = () => {
                   onClick={() => setSelectedLocker(locker)}
                   className={`p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
                     selectedLocker === locker
-                      ? 'border-blue-400 bg-blue-900/30'
-                      : 'border-gray-600 bg-gray-800/50 hover:bg-gray-700/50'
+                      ? "border-4 border-blue-400 bg-blue-100 shadow-xl ring-2 ring-blue-300 ring-offset-2 animate-pulse"
+                      : "border-gray-600 bg-gray-800/50 hover:bg-gray-700/50"
                   }`}
                 >
                   <div className="text-center">
@@ -311,16 +358,20 @@ const ProbabilityBay: React.FC = () => {
               <div className="mt-6 p-4 bg-red-900/30 border border-red-500 rounded-xl">
                 <p className="text-red-300 font-semibold">⚠️ Decoy Detected!</p>
                 <p className="text-red-200 text-sm mt-2">
-                  This locker accepted the code but wasn't aligned with the full interference pattern. Think deeper!
+                  This locker accepted the code but wasn't aligned with the full
+                  interference pattern. Think deeper!
                 </p>
               </div>
             )}
 
             {roomCompleted && (
               <div className="mt-6 p-4 bg-green-900/30 border border-green-500 rounded-xl">
-                <p className="text-green-300 font-semibold">🎉 Probability Bay Solved!</p>
+                <p className="text-green-300 font-semibold">
+                  🎉 Probability Bay Solved!
+                </p>
                 <p className="text-green-200 text-sm mt-2">
-                  You've stabilized the probability field by uncovering the hidden quantum structure!
+                  You've stabilized the probability field by uncovering the
+                  hidden quantum structure!
                 </p>
               </div>
             )}

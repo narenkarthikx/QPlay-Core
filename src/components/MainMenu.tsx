@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-import { Play, BookOpen, Trophy, Settings as SettingsIcon, Atom, User, LogOut, Crown } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import QuantumGuide from './QuantumGuide';
-import Achievements from './Achievements';
-import Settings from './Settings';
-import Leaderboard from './Leaderboard';
-import AuthModal from './auth/AuthModal';
+import React, { useState } from "react";
+import {
+  Play,
+  BookOpen,
+  Trophy,
+  Settings as SettingsIcon,
+  Atom,
+  User,
+  LogOut,
+  Crown,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import QuantumGuide from "./QuantumGuide";
+import Achievements from "./Achievements";
+import Settings from "./Settings";
+import Leaderboard from "./Leaderboard";
+import AuthModal from "./auth/AuthModal";
 
 interface MainMenuProps {
   onStartGame: () => void;
@@ -17,67 +26,84 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showBackstory, setShowBackstory] = useState(false);
 
   const { user, signOut } = useAuth();
 
-  const handleAuthClick = (mode: 'signin' | 'signup') => {
+  const handleAuthClick = (mode: "signin" | "signup") => {
     setAuthMode(mode);
     setShowAuth(true);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full text-center">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      aria-label="Main Menu"
+      tabIndex={-1}
+      role="main"
+    >
+      <div className="max-w-4xl w-full text-center space-y-8">
         {/* User Status Bar */}
         {user ? (
-          <div className="mb-8 flex items-center justify-between max-w-md mx-auto p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700">
+          <div
+            className="mb-8 flex items-center justify-between max-w-md mx-auto p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700"
+            aria-label="User Status Bar"
+            tabIndex={0}
+          >
             <div className="flex items-center space-x-3">
               {user?.avatar_url ? (
                 <img
                   src={user.avatar_url}
-                  alt={user?.username || 'User'}
                   className="w-10 h-10 rounded-full border-2 border-purple-400"
+                  aria-label="User Avatar"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-violet-500 flex items-center justify-center text-white font-bold">
-                  {user?.username?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
+                <User
+                  className="w-8 h-8 text-gray-400"
+                  aria-label="Default User Icon"
+                />
               )}
-              <div className="text-left">
-                <div className="font-semibold text-white">{user?.username || 'Unknown User'}</div>
-                <div className="text-xs text-gray-400">
-                  Level {user?.quantum_mastery_level || 1} • {user?.games_completed || 0} games completed
-                </div>
-              </div>
+              <span
+                className="font-semibold text-lg text-white"
+                aria-label="Username"
+              >
+                {user?.username}
+              </span>
+              <Crown
+                className="w-5 h-5 text-yellow-400"
+                aria-label="User Rank"
+              />
             </div>
             <button
+              className="ml-4 px-3 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-sm font-medium text-white flex items-center space-x-2"
               onClick={signOut}
-              className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-colors duration-200"
-              title="Sign Out"
+              aria-label="Sign Out"
+              tabIndex={0}
             >
               <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
             </button>
           </div>
         ) : (
-          <div className="mb-8 flex items-center justify-center space-x-4">
+          <div className="mb-8 flex items-center justify-center max-w-md mx-auto p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700">
             <button
-              onClick={() => handleAuthClick('signin')}
-              className="px-6 py-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 
-                       text-white font-semibold rounded-xl transition-all duration-300 
-                       transform hover:scale-105 flex items-center space-x-2"
+              className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 transition-colors text-white font-semibold"
+              onClick={() => handleAuthClick("signin")}
+              aria-label="Sign In"
+              tabIndex={0}
             >
-              <User className="w-4 h-4" />
-              <span>Sign In</span>
+              <User className="w-5 h-5 mr-2 inline" />
+              Sign In
             </button>
             <button
-              onClick={() => handleAuthClick('signup')}
-              className="px-6 py-2 bg-gradient-to-r from-purple-500 to-violet-500 
-                       hover:from-purple-400 hover:to-violet-400 text-white font-semibold 
-                       rounded-xl transition-all duration-300 transform hover:scale-105"
+              className="ml-4 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-semibold"
+              onClick={() => handleAuthClick("signup")}
+              aria-label="Sign Up"
+              tabIndex={0}
             >
-              Create Account
+              <User className="w-5 h-5 mr-2 inline" />
+              Sign Up
             </button>
           </div>
         )}
@@ -95,8 +121,9 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
             The Entangled Escape
           </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Embark on an extraordinary journey through the quantum realm. Master the mysteries of 
-            quantum physics through immersive escape rooms that challenge your understanding of reality itself.
+            Embark on an extraordinary journey through the quantum realm. Master
+            the mysteries of quantum physics through immersive escape rooms that
+            challenge your understanding of reality itself.
           </p>
         </div>
 
@@ -113,50 +140,50 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
           <button
             onClick={onStartGame}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 
-                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 
-                     transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500
+                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
+                     transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25
                      flex items-center justify-center space-x-3 text-lg"
           >
             <Play className="w-6 h-6" />
-            <span>{user ? 'Continue Quest' : 'Start Quest'}</span>
+            <span>{user ? "Continue Quest" : "Start Quest"}</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setShowLeaderboard(true)}
-            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 
-                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 
-                     transform hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 
+            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400
+                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
+                     transform hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25
                      flex items-center justify-center space-x-3 text-lg"
           >
             <Crown className="w-6 h-6" />
             <span>Leaderboards</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setShowGuide(true)}
-            className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 
-                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 
+            className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600
+                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 flex items-center justify-center space-x-3 text-lg"
           >
             <BookOpen className="w-6 h-6" />
             <span>Quantum Guide</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setShowAchievements(true)}
-            className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 
-                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 
+            className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600
+                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 flex items-center justify-center space-x-3 text-lg"
           >
             <Trophy className="w-6 h-6" />
             <span>Achievements</span>
           </button>
 
-          <button 
+          <button
             onClick={() => setShowSettings(true)}
-            className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600 
-                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 
+            className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600
+                     text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 flex items-center justify-center space-x-3 text-lg"
           >
             <SettingsIcon className="w-6 h-6" />
@@ -167,23 +194,33 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
         {/* User Stats Preview */}
         {user && (
           <div className="mt-12 max-w-2xl mx-auto">
-            <h3 className="text-xl font-semibold mb-4 text-gray-300">Your Quantum Journey</h3>
+            <h3 className="text-xl font-semibold mb-4 text-gray-300">
+              Your Quantum Journey
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-700">
-                <div className="text-2xl font-bold text-cyan-400">{user.games_completed}</div>
+                <div className="text-2xl font-bold text-cyan-400">
+                  {user.games_completed}
+                </div>
                 <div className="text-sm text-gray-400">Games Completed</div>
               </div>
               <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-700">
-                <div className="text-2xl font-bold text-purple-400">{user.total_score.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-purple-400">
+                  {user.total_score.toLocaleString()}
+                </div>
                 <div className="text-sm text-gray-400">Best Score</div>
               </div>
               <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-700">
-                <div className="text-2xl font-bold text-green-400">{user.quantum_mastery_level}</div>
+                <div className="text-2xl font-bold text-green-400">
+                  {user.quantum_mastery_level}
+                </div>
                 <div className="text-sm text-gray-400">Mastery Level</div>
               </div>
               <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-700">
                 <div className="text-2xl font-bold text-yellow-400">
-                  {user.best_completion_time ? `${Math.floor(user.best_completion_time / 60)}m` : '--'}
+                  {user.best_completion_time
+                    ? `${Math.floor(user.best_completion_time / 60)}m`
+                    : "--"}
                 </div>
                 <div className="text-sm text-gray-400">Best Time</div>
               </div>
@@ -193,24 +230,54 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
         {/* Room Preview */}
         <div className="mt-16">
-          <h3 className="text-xl font-semibold mb-6 text-gray-300">Your Quantum Journey</h3>
+          <h3 className="text-xl font-semibold mb-6 text-gray-300">
+            Your Quantum Journey
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto">
             {[
-              { name: 'Probability Bay', color: 'from-blue-500 to-cyan-500', icon: '🎲' },
-              { name: 'Superposition Tower', color: 'from-green-500 to-emerald-500', icon: '🗼' },
-              { name: 'State Chamber', color: 'from-purple-500 to-violet-500', icon: '🔮' },
-              { name: 'Entanglement Bridge', color: 'from-red-500 to-pink-500', icon: '🌉' },
-              { name: 'Tunneling Vault', color: 'from-yellow-500 to-orange-500', icon: '🏛️' },
-              { name: 'Quantum Archive', color: 'from-indigo-500 to-purple-500', icon: '📚' }
+              {
+                name: "Probability Bay",
+                color: "from-blue-500 to-cyan-500",
+                icon: "🎲",
+              },
+              {
+                name: "Superposition Tower",
+                color: "from-green-500 to-emerald-500",
+                icon: "🗼",
+              },
+              {
+                name: "State Chamber",
+                color: "from-purple-500 to-violet-500",
+                icon: "🔮",
+              },
+              {
+                name: "Entanglement Bridge",
+                color: "from-red-500 to-pink-500",
+                icon: "🌉",
+              },
+              {
+                name: "Tunneling Vault",
+                color: "from-yellow-500 to-orange-500",
+                icon: "🏛️",
+              },
+              {
+                name: "Quantum Archive",
+                color: "from-indigo-500 to-purple-500",
+                icon: "📚",
+              },
             ].map((room, index) => (
               <div key={index} className="relative group">
-                <div className={`w-full h-24 rounded-lg bg-gradient-to-br ${room.color} 
-                               opacity-30 group-hover:opacity-50 transition-opacity duration-300 
-                               flex items-center justify-center text-2xl`}>
+                <div
+                  className={`w-full h-24 rounded-lg bg-gradient-to-br ${room.color}
+                               opacity-30 group-hover:opacity-50 transition-opacity duration-300
+                               flex items-center justify-center text-2xl`}
+                >
                   {room.icon}
                 </div>
-                <div className="absolute inset-0 rounded-lg border border-gray-600 group-hover:border-gray-400 
-                               transition-colors duration-300"></div>
+                <div
+                  className="absolute inset-0 rounded-lg border border-gray-600 group-hover:border-gray-400
+                               transition-colors duration-300"
+                ></div>
                 <p className="text-xs mt-2 text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
                   {room.name}
                 </p>
@@ -222,9 +289,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
       {/* Modals */}
       {showGuide && <QuantumGuide onClose={() => setShowGuide(false)} />}
-      {showAchievements && <Achievements onClose={() => setShowAchievements(false)} />}
+      {showAchievements && (
+        <Achievements onClose={() => setShowAchievements(false)} />
+      )}
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
-      {showLeaderboard && <Leaderboard onClose={() => setShowLeaderboard(false)} />}
+      {showLeaderboard && (
+        <Leaderboard onClose={() => setShowLeaderboard(false)} />
+      )}
       {showAuth && (
         <AuthModal
           isOpen={showAuth}
@@ -249,13 +320,29 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
             </h2>
             <div className="text-gray-200 text-base leading-relaxed space-y-4">
               <p>
-                <span className="font-semibold text-purple-300">Dr. Schrödinger</span>, a brilliant but eccentric quantum physicist, has been conducting a series of daring experiments in his secret laboratory. His latest project: to entangle the minds of willing participants with the very fabric of quantum reality.
+                <span className="font-semibold text-purple-300">
+                  Dr. Schrödinger
+                </span>
+                , a brilliant but eccentric quantum physicist, has been
+                conducting a series of daring experiments in his secret
+                laboratory. His latest project: to entangle the minds of willing
+                participants with the very fabric of quantum reality.
               </p>
               <p>
-                But something has gone awry. The quantum lab is destabilizing, and the boundaries between probability and certainty are breaking down. You, a courageous explorer, have volunteered to enter the quantum maze and restore stability before the entire experiment collapses.
+                But something has gone awry. The quantum lab is destabilizing,
+                and the boundaries between probability and certainty are
+                breaking down. You, a courageous explorer, have volunteered to
+                enter the quantum maze and restore stability before the entire
+                experiment collapses.
               </p>
               <p>
-                <span className="font-semibold text-cyan-300">Your mission:</span> Solve quantum puzzles, master the mysteries of entanglement, and escape each room before the quantum state decoheres forever. The fate of Dr. Schrödinger's experiment—and perhaps reality itself—rests in your hands.
+                <span className="font-semibold text-cyan-300">
+                  Your mission:
+                </span>{" "}
+                Solve quantum puzzles, master the mysteries of entanglement, and
+                escape each room before the quantum state decoheres forever. The
+                fate of Dr. Schrödinger's experiment—and perhaps reality
+                itself—rests in your hands.
               </p>
             </div>
           </div>
