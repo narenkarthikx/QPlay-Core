@@ -30,10 +30,12 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
       height: window.innerHeight
     };
     
-    // Calculate responsive cat size based on viewport
-    const minSize = 100;
-    const maxSize = 140;
-    const responsiveSize = Math.min(maxSize, Math.max(minSize, viewport.width * 0.08));
+    // Calculate responsive cat size based on viewport - "gargantuan" presence
+    const minSize = 160;
+    const maxSize = 240;
+    // Target ~20% screen height or 200-240px for gargantuan feel
+    const screenHeightSize = viewport.height * 0.2;
+    const responsiveSize = Math.min(maxSize, Math.max(minSize, Math.max(screenHeightSize, viewport.width * 0.12)));
     setCatSize(responsiveSize);
     
     // Define potential positions (corners and sides) with priority order
@@ -51,31 +53,32 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
       { x: viewport.width - responsiveSize - 20, y: 80, priority: 6, zone: 'top-right' }
     ];
     
-    // UI collision zones by room (approximate positions of critical UI elements)
+    // UI collision zones by room (updated for larger gargantuan cat size)
     const uiCollisionZones = {
       'probability-bay': [
-        { x: viewport.width / 2 - 150, y: viewport.height - 200, width: 300, height: 150 }, // Dice area
-        { x: viewport.width / 2 - 200, y: 100, width: 400, height: 100 } // Tutorial/controls
+        { x: viewport.width / 2 - 180, y: viewport.height - 250, width: 360, height: 200 }, // Dice area (expanded)
+        { x: viewport.width / 2 - 200, y: 100, width: 400, height: 120 }, // Tutorial/controls
+        { x: 0, y: 0, width: viewport.width, height: 80 } // Top header bar
       ],
       'state-chamber': [
-        { x: viewport.width / 2 - 200, y: viewport.height / 2 - 100, width: 400, height: 200 }, // Central controls
-        { x: 0, y: 0, width: viewport.width, height: 60 } // Top bar
+        { x: viewport.width / 2 - 250, y: viewport.height / 2 - 150, width: 500, height: 300 }, // Central controls (expanded)
+        { x: 0, y: 0, width: viewport.width, height: 80 } // Top bar
       ],
       'superposition-tower': [
-        { x: viewport.width / 2 - 150, y: 100, width: 300, height: 400 }, // Tower structure
-        { x: viewport.width / 2 - 100, y: viewport.height - 100, width: 200, height: 80 } // Bottom controls
+        { x: viewport.width / 2 - 200, y: 100, width: 400, height: 450 }, // Tower structure (expanded)
+        { x: viewport.width / 2 - 150, y: viewport.height - 120, width: 300, height: 100 } // Bottom controls (expanded)
       ],
       'entanglement-bridge': [
-        { x: viewport.width / 2 - 250, y: viewport.height / 2 - 50, width: 500, height: 100 }, // Bridge area
-        { x: 50, y: viewport.height - 150, width: 200, height: 100 } // Control panel
+        { x: viewport.width / 2 - 300, y: viewport.height / 2 - 75, width: 600, height: 150 }, // Bridge area (expanded)
+        { x: 50, y: viewport.height - 180, width: 250, height: 130 } // Control panel (expanded)
       ],
       'tunneling-vault': [
-        { x: viewport.width / 2 - 150, y: viewport.height / 2 - 100, width: 300, height: 200 }, // Vault interface
-        { x: viewport.width - 250, y: 100, width: 200, height: 300 } // Side panels
+        { x: viewport.width / 2 - 200, y: viewport.height / 2 - 150, width: 400, height: 300 }, // Vault interface (expanded)
+        { x: viewport.width - 300, y: 100, width: 250, height: 350 } // Side panels (expanded)
       ],
       'quantum-archive': [
-        { x: 100, y: 100, width: viewport.width - 200, height: viewport.height - 200 }, // Archive panels
-        { x: viewport.width / 2 - 100, y: viewport.height - 80, width: 200, height: 60 } // Bottom controls
+        { x: 120, y: 120, width: viewport.width - 240, height: viewport.height - 280 }, // Archive panels (adjusted)
+        { x: viewport.width / 2 - 150, y: viewport.height - 100, width: 300, height: 80 } // Bottom controls (expanded)
       ]
     };
     
@@ -390,24 +393,52 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     }, 3000);
   }, [getRoomDialog, onHintRequest, isRoomCompleted]);
 
-  // Cat interaction handler with rotating messages
+  // Cat interaction handler with exactly 3 rotating contextual messages
   const handleCatClick = useCallback(() => {
     setLastInteraction(Date.now());
     
     if (behaviorState === 'stuck') {
       handleHintRequest();
     } else {
-      // Rotate through 2-3 messages on click
+      // Rotate through exactly 3 types: educational concept, story/fun fact, hint
       const dialog = getRoomDialog();
-      if (dialog && dialog.messages.length > 0) {
-        const maxMessages = Math.min(3, dialog.messages.length);
-        const message = dialog.messages[clickMessageIndex % maxMessages];
-        setCurrentMessage(message);
-        setShowMessage(true);
-        setClickMessageIndex(prev => (prev + 1) % maxMessages);
-        setCurrentAnimation('looking');
-        setTimeout(() => setShowMessage(false), 3500);
-        setTimeout(() => setCurrentAnimation('idle'), 2000);
+      if (dialog) {
+        let message: string = '';
+        
+        switch (clickMessageIndex % 3) {
+          case 0: // Educational concept
+            if (dialog.educationalFacts && dialog.educationalFacts.length > 0) {
+              message = dialog.educationalFacts[Math.floor(Math.random() * dialog.educationalFacts.length)];
+            } else if (dialog.messages && dialog.messages.length > 0) {
+              message = dialog.messages[0];
+            }
+            break;
+          case 1: // Story or fun fact
+            if (dialog.stories && dialog.stories.length > 0) {
+              message = dialog.stories[Math.floor(Math.random() * dialog.stories.length)];
+            } else if (dialog.messages && dialog.messages.length > 1) {
+              message = dialog.messages[1];
+            }
+            break;
+          case 2: // Optional hint
+            if (dialog.hints && dialog.hints.length > 0) {
+              message = dialog.hints[Math.floor(Math.random() * dialog.hints.length)];
+            } else if (dialog.messages && dialog.messages.length > 2) {
+              message = dialog.messages[2];
+            } else if (dialog.messages && dialog.messages.length > 0) {
+              message = dialog.messages[Math.floor(Math.random() * dialog.messages.length)];
+            }
+            break;
+        }
+        
+        if (message) {
+          setCurrentMessage(message);
+          setShowMessage(true);
+          setClickMessageIndex(prev => prev + 1);
+          setCurrentAnimation('looking');
+          setTimeout(() => setShowMessage(false), 3500);
+          setTimeout(() => setCurrentAnimation('idle'), 2000);
+        }
       }
     }
   }, [behaviorState, handleHintRequest, getRoomDialog, clickMessageIndex]);
