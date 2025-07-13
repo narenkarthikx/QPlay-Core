@@ -8,7 +8,8 @@ import EntanglementBridge from './rooms/EntanglementBridge';
 import TunnelingVault from './rooms/TunnelingVault';
 import QuantumArchive from './rooms/QuantumArchive';
 import RoomSelector from './RoomSelector';
-import { Room } from '../types/game';
+import CompanionCat from './CompanionCat';
+import { Room, SafeZone } from '../types/game';
 import PortalTransition from './ui/PortalTransition';
 
 interface GameControllerProps {
@@ -42,6 +43,34 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   const currentRoomIndex = rooms.indexOf(currentRoom);
   const canGoNext = currentRoomIndex < rooms.length - 1 && gameState.completedRooms.includes(currentRoom);
   const canGoPrevious = currentRoomIndex > 0;
+  const isRoomCompleted = gameState.completedRooms.includes(currentRoom);
+
+  // Define safe zones where the cat can be positioned (avoiding UI overlaps)
+  const getSafeZones = (): SafeZone[] => {
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    
+    return [
+      // Top corners (avoiding header)
+      { id: 'top-left-corner', x: 20, y: 80, width: 150, height: 150 },
+      { id: 'top-right-corner', x: viewportWidth - 170, y: 80, width: 150, height: 150 },
+      
+      // Bottom corners (avoiding completion notification area)
+      { id: 'bottom-left-corner', x: 20, y: viewportHeight - 200, width: 150, height: 150 },
+      { id: 'bottom-left-side', x: 20, y: viewportHeight / 2 - 75, width: 150, height: 150 },
+      
+      // Center left and right (avoiding main content area)
+      { id: 'center-left', x: 20, y: viewportHeight / 2 - 150, width: 150, height: 150 },
+      { id: 'center-right', x: viewportWidth - 170, y: viewportHeight / 2 - 150, width: 150, height: 150 },
+    ];
+  };
+
+  // Handle hint requests from the cat
+  const handleHintRequest = () => {
+    // This could trigger room-specific hint mechanisms
+    // For now, we'll just log it - individual rooms can implement their own hint systems
+    console.log(`Hint requested for ${currentRoom}`);
+  };
 
   const goToNextRoom = () => {
     if (canGoNext) {
@@ -168,6 +197,14 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
           </button>
         </div>
       )}
+
+      {/* Companion Cat */}
+      <CompanionCat
+        currentRoom={currentRoom}
+        isRoomCompleted={isRoomCompleted}
+        onHintRequest={handleHintRequest}
+        safeZones={getSafeZones()}
+      />
     </div>
   );
 };
