@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, Wifi, AlertTriangle, CheckCircle, BarChart3, Target, Clock, ArrowRight, BookOpen, Calculator, Settings, FlaskConical, TestTube, Trophy } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { CatReactionTriggers } from '../../types/game';
 
 interface Measurement {
   aliceAngle: number;
@@ -18,7 +19,11 @@ interface BellTestResult {
   correlationAverage: number;
 }
 
-const EntanglementBridge: React.FC = () => {
+interface EntanglementBridgeProps {
+  catReactionTriggers?: CatReactionTriggers;
+}
+
+const EntanglementBridge: React.FC<EntanglementBridgeProps> = ({ catReactionTriggers }) => {
   const { completeRoom } = useGame();
   const [bridgeIntegrity, setBridgeIntegrity] = useState(0);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -37,12 +42,18 @@ const EntanglementBridge: React.FC = () => {
   const bobAngles = [22.5, 45, 67.5];
 
   const startMeasurements = () => {
+    // Trigger cat reaction for starting gameplay
+    catReactionTriggers?.onRoomAction?.('room-entered');
+    
     setShowInstructions(false);
     setGamePhase('measuring');
   };
 
   const performSingleMeasurement = () => {
     if (measurements.length >= 100) return;
+    
+    // Trigger cat reaction for measurement action
+    catReactionTriggers?.onMeasureClick?.();
     
     setTestInProgress(true);
     
@@ -193,6 +204,10 @@ const EntanglementBridge: React.FC = () => {
           setTimeout(() => {
             setGamePhase('complete');
             setRoomCompleted(true);
+            
+            // Trigger cat success reaction
+            catReactionTriggers?.onSuccess?.();
+            
             completeRoom('entanglement-bridge');
           }, 2000);
         }, 1000);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Lock, CheckCircle, Zap, Network, AlertTriangle, RotateCcw } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
-import { Room } from '../../types/game';
+import { Room, CatReactionTriggers } from '../../types/game';
 
 interface QuantumConcept {
   id: string;
@@ -12,7 +12,11 @@ interface QuantumConcept {
   connected: boolean;
 }
 
-const QuantumArchive: React.FC = () => {
+interface QuantumArchiveProps {
+  catReactionTriggers?: CatReactionTriggers;
+}
+
+const QuantumArchive: React.FC<QuantumArchiveProps> = ({ catReactionTriggers }) => {
   const { gameState, completeRoom } = useGame();
   const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
@@ -23,6 +27,11 @@ const QuantumArchive: React.FC = () => {
   const [lastAttemptFeedback, setLastAttemptFeedback] = useState<string>('');
   const [maxAttempts] = useState(5);
   const [attemptsRemaining, setAttemptsRemaining] = useState(5);
+  
+  // Trigger cat entry on component mount
+  React.useEffect(() => {
+    catReactionTriggers?.onRoomAction?.('room-entered');
+  }, []);
 
   const quantumConcepts: QuantumConcept[] = [
     {
@@ -152,6 +161,9 @@ const QuantumArchive: React.FC = () => {
   const attemptConnection = () => {
     if (isOnCooldown || attemptsRemaining <= 0) return;
 
+    // Trigger cat reaction for connection attempt
+    catReactionTriggers?.onMeasureClick?.();
+
     const attempts = connectionAttempts + 1;
     setConnectionAttempts(attempts);
     setAttemptsRemaining(prev => prev - 1);
@@ -170,8 +182,15 @@ const QuantumArchive: React.FC = () => {
       setArchiveUnlocked(true);
       setShowAdvancedQuests(true);
       setLastAttemptFeedback('Perfect! All quantum concepts successfully connected. Archive unlocked!');
+      
+      // Trigger cat success reaction
+      catReactionTriggers?.onSuccess?.();
+      
       completeRoom('quantum-archive');
     } else {
+      // Trigger cat failure reaction
+      catReactionTriggers?.onFailure?.(attempts);
+      
       setLastAttemptFeedback(analysis.feedback);
       
       // Progressive cooldown based on attempt number

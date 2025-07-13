@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowRight, AlertTriangle, Mountain, Calculator, BookOpen, Target, BarChart3 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { CatReactionTriggers } from '../../types/game';
 
 interface TunnelingAttempt {
   barrierHeight: number;
@@ -11,7 +12,11 @@ interface TunnelingAttempt {
   timestamp: number;
 }
 
-const TunnelingVault: React.FC = () => {
+interface TunnelingVaultProps {
+  catReactionTriggers?: CatReactionTriggers;
+}
+
+const TunnelingVault: React.FC<TunnelingVaultProps> = ({ catReactionTriggers }) => {
   const { completeRoom } = useGame();
   const [barrierHeight, setBarrierHeight] = useState(5.0); // eV
   const [barrierWidth, setBarrierWidth] = useState(2.0); // nm
@@ -36,6 +41,11 @@ const TunnelingVault: React.FC = () => {
     calculateTunnelingProbability();
     generateWaveFunction();
   }, [barrierHeight, barrierWidth, particleEnergy]);
+  
+  // Trigger cat entry on component mount
+  useEffect(() => {
+    catReactionTriggers?.onRoomAction?.('room-entered');
+  }, []);
 
   // Collapse timer
   useEffect(() => {
@@ -117,6 +127,9 @@ const TunnelingVault: React.FC = () => {
   };
 
   const startVaultCollapse = () => {
+    // Trigger cat reaction for starting gameplay
+    catReactionTriggers?.onMeasureClick?.();
+    
     setVaultCollapsing(true);
     setGamePhase('collapsing');
     setTimeLeft(60);
@@ -152,10 +165,15 @@ const TunnelingVault: React.FC = () => {
       setTimeout(() => {
         setRoomCompleted(true);
         setGamePhase('complete');
+        
+        // Trigger cat success reaction
+        catReactionTriggers?.onSuccess?.();
+        
         completeRoom('tunneling-vault');
       }, 2000);
     } else if (attemptCount >= 5) {
       // After 5 failed attempts, give helpful hint
+      catReactionTriggers?.onFailure?.(attemptCount);
       setTimeout(() => {
         resetVault();
       }, 3000);

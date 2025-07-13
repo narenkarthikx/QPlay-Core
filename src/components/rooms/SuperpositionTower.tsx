@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowUp, ArrowDown, RefreshCw, Lightbulb, Eye, Target, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { CatReactionTriggers } from '../../types/game';
 
 interface QuantumPad {
   id: number;
@@ -17,7 +18,11 @@ interface PathSegment {
   stable: boolean;
 }
 
-const SuperpositionTower: React.FC = () => {
+interface SuperpositionTowerProps {
+  catReactionTriggers?: CatReactionTriggers;
+}
+
+const SuperpositionTower: React.FC<SuperpositionTowerProps> = ({ catReactionTriggers }) => {
   const { completeRoom, logQuantumMeasurement } = useGame();
   const [currentFloor, setCurrentFloor] = useState(0);
   const [playerPosition, setPlayerPosition] = useState(2); // Middle position
@@ -139,6 +144,11 @@ const SuperpositionTower: React.FC = () => {
 
   // Initialize quantum pads for current floor
   useEffect(() => {
+    // Trigger cat entry reaction on first load
+    if (currentFloor === 0 && !gameStarted) {
+      catReactionTriggers?.onRoomAction?.('room-entered');
+    }
+    
     let newPads: QuantumPad[];
     const pattern = floorPatterns[currentFloor];
     let attempts = 0;
@@ -192,6 +202,9 @@ const SuperpositionTower: React.FC = () => {
   }, [pathStable, decoherenceTimer]);
 
   const startGame = () => {
+    // Trigger cat reaction for starting gameplay
+    catReactionTriggers?.onMeasureClick?.();
+    
     setGameStarted(true);
     setShowTutorial(false);
     setTimeLeft(180);
@@ -336,6 +349,9 @@ const SuperpositionTower: React.FC = () => {
               attempts: attempts,
               score: score
             });
+            
+            // Trigger cat success reaction
+            catReactionTriggers?.onSuccess?.();
           }, 2000);
         }
       }, 1000);

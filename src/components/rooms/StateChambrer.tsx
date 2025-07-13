@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Compass, Zap, Timer, AlertTriangle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { CatReactionTriggers } from '../../types/game';
 
 // Add global type declarations for Blochy libraries
 declare global {
@@ -35,7 +36,11 @@ function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-const StateChambrer: React.FC = () => {
+interface StateChambrerProps {
+  catReactionTriggers?: CatReactionTriggers;
+}
+
+const StateChambrer: React.FC<StateChambrerProps> = ({ catReactionTriggers }) => {
   const { completeRoom } = useGame();
   const [measurements, setMeasurements] = useState({ x: 0, y: 0, z: 0 });
   const [measurementCount, setMeasurementCount] = useState({ x: 0, y: 0, z: 0 });
@@ -104,6 +109,9 @@ const StateChambrer: React.FC = () => {
   
   // Load Blochy scripts and initialize Bloch sphere with proper error handling
   useEffect(() => {
+    // Trigger cat entry reaction
+    catReactionTriggers?.onRoomAction?.('room-entered');
+    
     const loadScripts = async () => {
       try {
         // Add CSS for zero-lag slider first
@@ -238,6 +246,9 @@ const StateChambrer: React.FC = () => {
   const performMeasurement = (axis: 'x' | 'y' | 'z') => {
     if (measurementCount[axis] >= 3) return;
 
+    // Trigger cat reaction for measurement action
+    catReactionTriggers?.onMeasureClick?.();
+
     const noise = (Math.random() - 0.5) * 0.2;
     const measurement = targetState[axis] + noise;
     
@@ -291,6 +302,10 @@ const StateChambrer: React.FC = () => {
 
     if (magnitude > 0.9 && magnitude < 1.1) {
       setRoomCompleted(true);
+      
+      // Trigger cat success reaction
+      catReactionTriggers?.onSuccess?.();
+      
       completeRoom('state-chamber');
     }
 

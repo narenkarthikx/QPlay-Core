@@ -95,15 +95,15 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
       case 'probability-bay':
         return <ProbabilityBay catReactionTriggers={catReactionTriggers} />;
       case 'state-chamber':
-        return <StateChambrer />;
+        return <StateChambrer catReactionTriggers={catReactionTriggers} />;
       case 'superposition-tower':
-        return <SuperpositionTower />;
+        return <SuperpositionTower catReactionTriggers={catReactionTriggers} />;
       case 'entanglement-bridge':
-        return <EntanglementBridge />;
+        return <EntanglementBridge catReactionTriggers={catReactionTriggers} />;
       case 'tunneling-vault':
-        return <TunnelingVault />;
+        return <TunnelingVault catReactionTriggers={catReactionTriggers} />;
       case 'quantum-archive':
-        return <QuantumArchive />;
+        return <QuantumArchive catReactionTriggers={catReactionTriggers} />;
       default:
         return <ProbabilityBay catReactionTriggers={catReactionTriggers} />;
     }
