@@ -57,5 +57,4 @@ export interface CompanionCatProps {
   currentRoom: Room;
   isRoomCompleted: boolean;
   onHintRequest: () => void;
-  safeZones: SafeZone[];
 }

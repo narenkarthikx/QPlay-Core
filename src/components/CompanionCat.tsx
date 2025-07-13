@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Heart, Brain, Zap } from 'lucide-react';
-import { CompanionCatProps, CatAnimation, CatBehaviorState, CatDialog, SafeZone } from '../types/game';
+import { CompanionCatProps, CatAnimation, CatBehaviorState, CatDialog } from '../types/game';
 import catDialogData from '../data/catDialog.json';
 
 const CompanionCat: React.FC<CompanionCatProps> = ({
   currentRoom,
   isRoomCompleted,
-  onHintRequest,
-  safeZones
+  onHintRequest
 }) => {
   const [currentAnimation, setCurrentAnimation] = useState<CatAnimation>('idle');
   const [currentMessage, setCurrentMessage] = useState<string>('');
   const [showMessage, setShowMessage] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState({ x: 50, y: 50 });
+  const [fixedPosition] = useState({ x: window.innerWidth - 140, y: window.innerHeight - 140 }); // Fixed bottom-right position
   const [behaviorState, setBehaviorState] = useState<CatBehaviorState>('entry');
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [quantumEffect, setQuantumEffect] = useState(false);
-  const [personality, setPersonality] = useState({ curiosity: 0.8, helpfulness: 0.9, playfulness: 0.7 });
+  const [isLookingAtMouse, setIsLookingAtMouse] = useState(false);
+  const [eyeDirection, setEyeDirection] = useState({ x: 0, y: 0 });
 
   // Get dialog data for current room and state
   const getRoomDialog = useCallback((): CatDialog | null => {
@@ -34,29 +34,37 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     };
   }, [currentRoom, behaviorState]);
 
-  // Calculate safe position avoiding UI overlaps
-  const calculateSafePosition = useCallback((): { x: number; y: number } => {
-    const catSize = { width: 120, height: 120 };
-    const margin = 20;
-    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+  // Mouse tracking for eye movement
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    const catCenterX = fixedPosition.x + 60;
+    const catCenterY = fixedPosition.y + 40;
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
     
-    // Default safe zones (corners and sides)
-    const defaultSafeZones: SafeZone[] = [
-      { id: 'top-left', x: margin, y: margin, width: catSize.width, height: catSize.height },
-      { id: 'top-right', x: viewportWidth - catSize.width - margin, y: margin, width: catSize.width, height: catSize.height },
-      { id: 'bottom-left', x: margin, y: viewportHeight - catSize.height - margin, width: catSize.width, height: catSize.height },
-      { id: 'bottom-right', x: viewportWidth - catSize.width - margin, y: viewportHeight - catSize.height - margin, width: catSize.width, height: catSize.height },
-      { id: 'center-left', x: margin, y: viewportHeight / 2 - catSize.height / 2, width: catSize.width, height: catSize.height },
-      { id: 'center-right', x: viewportWidth - catSize.width - margin, y: viewportHeight / 2 - catSize.height / 2, width: catSize.width, height: catSize.height }
-    ];
+    // Calculate direction from cat to mouse (limited range)
+    const deltaX = mouseX - catCenterX;
+    const deltaY = mouseY - catCenterY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Only look if mouse is reasonably close (within 300px)
+    if (distance < 300) {
+      setIsLookingAtMouse(true);
+      const maxEyeMovement = 3; // Subtle eye movement
+      setEyeDirection({
+        x: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, deltaX / 50)),
+        y: Math.max(-maxEyeMovement, Math.min(maxEyeMovement, deltaY / 50))
+      });
+    } else {
+      setIsLookingAtMouse(false);
+      setEyeDirection({ x: 0, y: 0 });
+    }
+  }, [fixedPosition]);
 
-    const availableZones = [...safeZones, ...defaultSafeZones];
-    
-    // Choose a random safe zone
-    const randomZone = availableZones[Math.floor(Math.random() * availableZones.length)];
-    return { x: randomZone.x, y: randomZone.y };
-  }, [safeZones]);
+  // Track mouse movement for eye reactions
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [handleMouseMove]);
 
   // Show random message based on current state
   const showRandomMessage = useCallback(() => {
@@ -115,31 +123,25 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     }
   }, [isRoomCompleted, lastInteraction, behaviorState]);
 
-  // AI-like behavior patterns
-  const updateAIBehavior = useCallback(() => {
+  // Subtle micro-behaviors for stationary cat
+  const updateMicroBehaviors = useCallback(() => {
     const random = Math.random();
     
-    // Personality-driven behavior
-    if (random < personality.curiosity * 0.3) {
+    // Only small reactions, no movement
+    if (random < 0.1) {
+      // Occasional ear flick or tail movement (via slight animations)
       setCurrentAnimation('sniffing');
-      setTimeout(() => setCurrentAnimation('idle'), 2000);
-    } else if (random < personality.playfulness * 0.2) {
-      setCurrentAnimation('walking');
-      // Move to new safe position
-      setTimeout(() => {
-        setCurrentPosition(calculateSafePosition());
-        setCurrentAnimation('sitting');
-      }, 1500);
-    } else if (random < personality.helpfulness * 0.4 && behaviorState === 'stuck') {
+      setTimeout(() => setCurrentAnimation('idle'), 1500);
+    } else if (random < 0.05 && behaviorState === 'stuck') {
+      // Show subtle concern
       showRandomMessage();
     }
-  }, [personality, behaviorState, calculateSafePosition, showRandomMessage]);
+  }, [behaviorState, showRandomMessage]);
 
-  // Handle room changes
+  // Handle room changes (no position changes, just state)
   useEffect(() => {
     setBehaviorState('entry');
-    setCurrentAnimation('walking');
-    setCurrentPosition(calculateSafePosition());
+    setCurrentAnimation('looking'); // Just a gentle look, no walking
     setLastInteraction(Date.now());
     
     // Show entry message after a brief delay
@@ -147,17 +149,17 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
       showRandomMessage();
       setCurrentAnimation('sitting');
     }, 1000);
-  }, [currentRoom, calculateSafePosition, showRandomMessage]);
+  }, [currentRoom, showRandomMessage]);
 
   // Periodic behavior updates
   useEffect(() => {
     const behaviorInterval = setInterval(() => {
       updateBehaviorState();
-      updateAIBehavior();
-    }, 5000);
+      updateMicroBehaviors();
+    }, 8000); // Slower, more subtle updates
 
     return () => clearInterval(behaviorInterval);
-  }, [updateBehaviorState, updateAIBehavior]);
+  }, [updateBehaviorState, updateMicroBehaviors]);
 
   // Handle hint requests
   const handleHintRequest = useCallback(() => {
@@ -198,43 +200,34 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     }
   }, [behaviorState, handleHintRequest, showRandomMessage]);
 
-  // Animation variants
+  // Animation variants for stationary, reactive cat
   const catVariants = {
     idle: {
-      scale: [1, 1.05, 1],
-      rotate: [0, 2, -2, 0],
-      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-    },
-    walking: {
-      x: [0, 10, -10, 0],
-      y: [0, -5, 0],
-      rotate: [0, 5, -5, 0],
-      transition: { duration: 1.5, repeat: 2, ease: "easeInOut" }
-    },
-    sitting: {
-      scale: [1, 0.95, 1],
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-    },
-    celebrating: {
-      scale: [1, 1.2, 1],
-      rotate: [0, 10, -10, 0],
-      y: [0, -20, 0],
-      transition: { duration: 0.8, repeat: 3, ease: "easeInOut" }
-    },
-    sleeping: {
-      scale: [1, 0.9, 1],
-      opacity: [1, 0.8, 1],
+      scale: [1, 1.02, 1],
       transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
     },
-    looking: {
-      rotate: [0, 15, -15, 0],
+    sitting: {
+      scale: [1, 0.98, 1],
+      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+    },
+    celebrating: {
       scale: [1, 1.1, 1],
-      transition: { duration: 1, repeat: 2, ease: "easeInOut" }
+      rotate: [0, 3, -3, 0],
+      transition: { duration: 0.6, repeat: 3, ease: "easeInOut" }
+    },
+    sleeping: {
+      scale: [1, 0.95, 1],
+      opacity: [1, 0.9, 1],
+      transition: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+    },
+    looking: {
+      rotate: [0, isLookingAtMouse ? eyeDirection.x * 2 : 5, isLookingAtMouse ? eyeDirection.x * 2 : -5, 0],
+      transition: { duration: 2, ease: "easeInOut" }
     },
     sniffing: {
-      y: [0, -5, -10, -5, 0],
-      scale: [1, 1.05, 1.1, 1.05, 1],
-      transition: { duration: 2, ease: "easeInOut" }
+      y: [0, -2, 0],
+      scale: [1, 1.03, 1],
+      transition: { duration: 1.5, ease: "easeInOut" }
     }
   };
 
@@ -244,25 +237,25 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
       opacity: [0, 1, 0],
       scale: [0, 1.5, 0],
       rotate: [0, 180, 360],
-      transition: { duration: 2, ease: "easeInOut" }
+      transition: { duration: 2, ease: [0.23, 1, 0.32, 1] }
     }
   };
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40">
-      {/* Cat Character */}
+      {/* Cat Character - Fixed Position */}
       <motion.div
         className="absolute pointer-events-auto cursor-pointer select-none"
-        initial={{ x: currentPosition.x, y: currentPosition.y }}
-        animate={{ 
-          x: currentPosition.x, 
-          y: currentPosition.y,
-          ...catVariants[currentAnimation]
+        style={{ 
+          x: fixedPosition.x, 
+          y: fixedPosition.y,
+          width: 120, 
+          height: 120 
         }}
+        animate={catVariants[currentAnimation]}
         onClick={handleCatClick}
-        style={{ width: 120, height: 120 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.98 }}
       >
         {/* Cat Body */}
         <div className="relative w-full h-full">
@@ -301,11 +294,11 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
             <ellipse cx="45" cy="95" rx="6" ry="12" fill="url(#catGradient)" />
             <ellipse cx="75" cy="95" rx="6" ry="12" fill="url(#catGradient)" />
             
-            {/* Cat face features */}
-            <circle cx="52" cy="35" r="3" fill="#fff" opacity="0.9" />
-            <circle cx="68" cy="35" r="3" fill="#fff" opacity="0.9" />
-            <circle cx="52" cy="37" r="1.5" fill="#1f2937" />
-            <circle cx="68" cy="37" r="1.5" fill="#1f2937" />
+            {/* Cat face features with responsive eyes */}
+            <circle cx={52 + eyeDirection.x} cy={35 + eyeDirection.y} r="3" fill="#fff" opacity="0.9" />
+            <circle cx={68 + eyeDirection.x} cy={35 + eyeDirection.y} r="3" fill="#fff" opacity="0.9" />
+            <circle cx={52 + eyeDirection.x} cy={37 + eyeDirection.y} r="1.5" fill="#1f2937" />
+            <circle cx={68 + eyeDirection.x} cy={37 + eyeDirection.y} r="1.5" fill="#1f2937" />
             
             {/* Cat nose */}
             <polygon points="60,42 58,46 62,46" fill="#ec4899" />
@@ -362,8 +355,8 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             style={{
-              left: Math.min(currentPosition.x + 140, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 300),
-              top: Math.max(currentPosition.y - 20, 20),
+              left: Math.min(fixedPosition.x - 320, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 300),
+              top: Math.max(fixedPosition.y - 20, 20),
             }}
           >
             <div className="text-sm text-gray-200 leading-relaxed">
@@ -387,8 +380,8 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         <motion.button
           className="absolute bg-yellow-500/90 hover:bg-yellow-400/90 text-gray-900 px-3 py-1 rounded-full text-xs font-semibold pointer-events-auto"
           style={{
-            left: currentPosition.x + 60,
-            top: currentPosition.y - 30,
+            left: fixedPosition.x + 60,
+            top: fixedPosition.y - 30,
           }}
           onClick={handleHintRequest}
           initial={{ opacity: 0, y: 10 }}
