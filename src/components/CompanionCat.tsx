@@ -12,7 +12,20 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
   const [currentAnimation, setCurrentAnimation] = useState<CatAnimation>('idle');
   const [currentMessage, setCurrentMessage] = useState<string>('');
   const [showMessage, setShowMessage] = useState(false);
-  const [fixedPosition] = useState({ x: window.innerWidth - 140, y: window.innerHeight - 140 }); // Fixed bottom-right position
+  // Per-room positioning system - fixed positions that don't overlap with UI
+  const getRoomPosition = useCallback(() => {
+    const roomPositions = {
+      'probability-bay': { x: 60, y: window.innerHeight - 180 }, // Left-bottom - safe from dice area
+      'state-chamber': { x: 60, y: window.innerHeight / 2 - 60 }, // Left-middle - safe from controls
+      'superposition-tower': { x: 60, y: window.innerHeight - 180 }, // Left-bottom - safe from tower UI
+      'entanglement-bridge': { x: 60, y: window.innerHeight / 2 - 60 }, // Left-middle - safe from bridge controls
+      'tunneling-vault': { x: 60, y: window.innerHeight - 180 }, // Left-bottom - safe from vault interface
+      'quantum-archive': { x: 60, y: window.innerHeight / 2 - 60 } // Left-middle - safe from archive panels
+    };
+    
+    return roomPositions[currentRoom] || { x: 60, y: window.innerHeight - 180 };
+  }, [currentRoom]);
+
   const [behaviorState, setBehaviorState] = useState<CatBehaviorState>('entry');
   const [lastInteraction, setLastInteraction] = useState(Date.now());
   const [quantumEffect, setQuantumEffect] = useState(false);
@@ -34,10 +47,11 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     };
   }, [currentRoom, behaviorState]);
 
-  // Mouse tracking for eye movement
+  // Mouse tracking for eye movement - use dynamic position
   const handleMouseMove = useCallback((event: MouseEvent) => {
-    const catCenterX = fixedPosition.x + 60;
-    const catCenterY = fixedPosition.y + 40;
+    const currentPosition = getRoomPosition();
+    const catCenterX = currentPosition.x + 60;
+    const catCenterY = currentPosition.y + 40;
     const mouseX = event.clientX;
     const mouseY = event.clientY;
     
@@ -58,7 +72,7 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
       setIsLookingAtMouse(false);
       setEyeDirection({ x: 0, y: 0 });
     }
-  }, [fixedPosition]);
+  }, [getRoomPosition]);
 
   // Track mouse movement for eye reactions
   useEffect(() => {
@@ -138,7 +152,7 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     }
   }, [behaviorState, showRandomMessage]);
 
-  // Handle room changes (no position changes, just state)
+  // Handle room changes - behavior only, no movement
   useEffect(() => {
     setBehaviorState('entry');
     setCurrentAnimation('looking'); // Just a gentle look, no walking
@@ -200,7 +214,7 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
     }
   }, [behaviorState, handleHintRequest, showRandomMessage]);
 
-  // Animation variants for stationary, reactive cat
+  // Animation variants for stationary, reactive cat - NO positional movement
   const catVariants = {
     idle: {
       scale: [1, 1.02, 1],
@@ -221,11 +235,11 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
       transition: { duration: 5, repeat: Infinity, ease: "easeInOut" }
     },
     looking: {
-      rotate: [0, isLookingAtMouse ? eyeDirection.x * 2 : 5, isLookingAtMouse ? eyeDirection.x * 2 : -5, 0],
+      rotate: [0, isLookingAtMouse ? eyeDirection.x * 1 : 2, isLookingAtMouse ? eyeDirection.x * 1 : -2, 0],
       transition: { duration: 2, ease: "easeInOut" }
     },
     sniffing: {
-      y: [0, -2, 0],
+      // Removed y-movement, only scale for breathing effect
       scale: [1, 1.03, 1],
       transition: { duration: 1.5, ease: "easeInOut" }
     }
@@ -243,12 +257,12 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
 
   return (
     <div className="fixed inset-0 pointer-events-none z-40">
-      {/* Cat Character - Fixed Position */}
+      {/* Cat Character - Room-Specific Fixed Position */}
       <motion.div
         className="absolute pointer-events-auto cursor-pointer select-none"
         style={{ 
-          x: fixedPosition.x, 
-          y: fixedPosition.y,
+          x: getRoomPosition().x, 
+          y: getRoomPosition().y,
           width: 120, 
           height: 120 
         }}
@@ -346,7 +360,7 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         </div>
       </motion.div>
 
-      {/* Speech Bubble */}
+      {/* Speech Bubble - Dynamic positioning */}
       <AnimatePresence>
         {showMessage && currentMessage && (
           <motion.div
@@ -355,15 +369,15 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             style={{
-              left: Math.min(fixedPosition.x - 320, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 300),
-              top: Math.max(fixedPosition.y - 20, 20),
+              left: getRoomPosition().x + 140, // Position to the right of cat
+              top: Math.max(getRoomPosition().y - 20, 20),
             }}
           >
             <div className="text-sm text-gray-200 leading-relaxed">
               {currentMessage}
             </div>
             
-            {/* Speech bubble tail */}
+            {/* Speech bubble tail - positioned for left-side cat */}
             <div 
               className="absolute w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-gray-600"
               style={{
@@ -375,13 +389,13 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Hint button overlay */}
+      {/* Hint button overlay - Dynamic positioning */}
       {behaviorState === 'stuck' && (
         <motion.button
           className="absolute bg-yellow-500/90 hover:bg-yellow-400/90 text-gray-900 px-3 py-1 rounded-full text-xs font-semibold pointer-events-auto"
           style={{
-            left: fixedPosition.x + 60,
-            top: fixedPosition.y - 30,
+            left: getRoomPosition().x + 60,
+            top: getRoomPosition().y - 30,
           }}
           onClick={handleHintRequest}
           initial={{ opacity: 0, y: 10 }}
