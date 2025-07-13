@@ -20,21 +20,139 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
   const [eyeDirection, setEyeDirection] = useState({ x: 0, y: 0 });
   const [failureCount, setFailureCount] = useState(0);
   const [clickMessageIndex, setClickMessageIndex] = useState(0);
-  // Per-room positioning system - fixed positions that don't overlap with UI
-  const getRoomPosition = useCallback(() => {
-    const roomPositions = {
-      'probability-bay': { x: 60, y: window.innerHeight - 180 }, // Left-bottom - safe from dice area
-      'state-chamber': { x: 60, y: window.innerHeight / 2 - 60 }, // Left-middle - safe from controls
-      'superposition-tower': { x: 60, y: window.innerHeight - 180 }, // Left-bottom - safe from tower UI
-      'entanglement-bridge': { x: 60, y: window.innerHeight / 2 - 60 }, // Left-middle - safe from bridge controls
-      'tunneling-vault': { x: 60, y: window.innerHeight - 180 }, // Left-bottom - safe from vault interface
-      'quantum-archive': { x: 60, y: window.innerHeight / 2 - 60 } // Left-middle - safe from archive panels
+  const [catSize, setCatSize] = useState(120);
+  const [currentPosition, setCurrentPosition] = useState({ x: 60, y: 60 });
+
+  // Responsive positioning system - dynamically finds safe zones avoiding UI conflicts
+  const findOptimalPosition = useCallback(() => {
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight
     };
     
-    return roomPositions[currentRoom] || { x: 60, y: window.innerHeight - 180 };
+    // Calculate responsive cat size based on viewport
+    const minSize = 100;
+    const maxSize = 140;
+    const responsiveSize = Math.min(maxSize, Math.max(minSize, viewport.width * 0.08));
+    setCatSize(responsiveSize);
+    
+    // Define potential positions (corners and sides) with priority order
+    const potentialPositions = [
+      // Bottom corners (preferred for stability)
+      { x: 20, y: viewport.height - responsiveSize - 20, priority: 1, zone: 'bottom-left' },
+      { x: viewport.width - responsiveSize - 20, y: viewport.height - responsiveSize - 20, priority: 2, zone: 'bottom-right' },
+      
+      // Side middle positions
+      { x: 20, y: (viewport.height - responsiveSize) / 2, priority: 3, zone: 'left-middle' },
+      { x: viewport.width - responsiveSize - 20, y: (viewport.height - responsiveSize) / 2, priority: 4, zone: 'right-middle' },
+      
+      // Top corners (less preferred)
+      { x: 20, y: 80, priority: 5, zone: 'top-left' },
+      { x: viewport.width - responsiveSize - 20, y: 80, priority: 6, zone: 'top-right' }
+    ];
+    
+    // UI collision zones by room (approximate positions of critical UI elements)
+    const uiCollisionZones = {
+      'probability-bay': [
+        { x: viewport.width / 2 - 150, y: viewport.height - 200, width: 300, height: 150 }, // Dice area
+        { x: viewport.width / 2 - 200, y: 100, width: 400, height: 100 } // Tutorial/controls
+      ],
+      'state-chamber': [
+        { x: viewport.width / 2 - 200, y: viewport.height / 2 - 100, width: 400, height: 200 }, // Central controls
+        { x: 0, y: 0, width: viewport.width, height: 60 } // Top bar
+      ],
+      'superposition-tower': [
+        { x: viewport.width / 2 - 150, y: 100, width: 300, height: 400 }, // Tower structure
+        { x: viewport.width / 2 - 100, y: viewport.height - 100, width: 200, height: 80 } // Bottom controls
+      ],
+      'entanglement-bridge': [
+        { x: viewport.width / 2 - 250, y: viewport.height / 2 - 50, width: 500, height: 100 }, // Bridge area
+        { x: 50, y: viewport.height - 150, width: 200, height: 100 } // Control panel
+      ],
+      'tunneling-vault': [
+        { x: viewport.width / 2 - 150, y: viewport.height / 2 - 100, width: 300, height: 200 }, // Vault interface
+        { x: viewport.width - 250, y: 100, width: 200, height: 300 } // Side panels
+      ],
+      'quantum-archive': [
+        { x: 100, y: 100, width: viewport.width - 200, height: viewport.height - 200 }, // Archive panels
+        { x: viewport.width / 2 - 100, y: viewport.height - 80, width: 200, height: 60 } // Bottom controls
+      ]
+    };
+    
+    // Check for collisions with UI elements
+    const hasCollision = (pos: typeof potentialPositions[0], zones: typeof uiCollisionZones['probability-bay']) => {
+      const catBounds = {
+        x: pos.x,
+        y: pos.y,
+        width: responsiveSize,
+        height: responsiveSize
+      };
+      
+      return zones.some(zone => {
+        return !(catBounds.x + catBounds.width < zone.x ||
+                catBounds.x > zone.x + zone.width ||
+                catBounds.y + catBounds.height < zone.y ||
+                catBounds.y > zone.y + zone.height);
+      });
+    };
+    
+    // Find best position without collisions
+    const currentRoomZones = uiCollisionZones[currentRoom] || [];
+    const safePositions = potentialPositions.filter(pos => !hasCollision(pos, currentRoomZones));
+    
+    // Use the highest priority safe position, or fallback to safest position
+    const optimalPosition = safePositions.length > 0 
+      ? safePositions.sort((a, b) => a.priority - b.priority)[0]
+      : { x: 20, y: viewport.height - responsiveSize - 20, priority: 1, zone: 'bottom-left' };
+    
+    return { x: optimalPosition.x, y: optimalPosition.y };
   }, [currentRoom]);
 
-  // Get dialog data for current room and state
+  // Update position when room changes or window resizes
+  useEffect(() => {
+    const updatePosition = () => {
+      const newPosition = findOptimalPosition();
+      setCurrentPosition(newPosition);
+    };
+    
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [findOptimalPosition]);
+
+  // Get responsive position - now uses dynamic calculation
+  const getRoomPosition = useCallback(() => {
+    return currentPosition;
+  }, [currentPosition]);
+
+  // Enhanced speech bubble positioning to avoid UI conflicts
+  const getSpeechBubblePosition = useCallback(() => {
+    const catPos = getRoomPosition();
+    const viewport = { width: window.innerWidth, height: window.innerHeight };
+    const bubbleWidth = 260;
+    const bubbleHeight = 80; // Approximate height
+    
+    // Try right side first (preferred)
+    let bubbleX = catPos.x + catSize + 20;
+    let bubbleY = Math.max(catPos.y - 20, 20);
+    
+    // If bubble would go off-screen right, position to the left
+    if (bubbleX + bubbleWidth > viewport.width - 20) {
+      bubbleX = catPos.x - bubbleWidth - 20;
+    }
+    
+    // If bubble would go off-screen bottom, adjust up
+    if (bubbleY + bubbleHeight > viewport.height - 20) {
+      bubbleY = viewport.height - bubbleHeight - 20;
+    }
+    
+    // Ensure bubble stays on-screen horizontally
+    if (bubbleX < 20) {
+      bubbleX = 20;
+    }
+    
+    return { x: bubbleX, y: bubbleY };
+  }, [getRoomPosition, catSize]);
   const getRoomDialog = useCallback((state?: string): CatDialog | null => {
     const roomData = (catDialogData as any)[currentRoom];
     const dialogState = state || behaviorState;
@@ -121,8 +239,8 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
   // Mouse tracking for eye movement - use dynamic position
   const handleMouseMove = useCallback((event: MouseEvent) => {
     const currentPosition = getRoomPosition();
-    const catCenterX = currentPosition.x + 60;
-    const catCenterY = currentPosition.y + 40;
+    const catCenterX = currentPosition.x + catSize / 2;
+    const catCenterY = currentPosition.y + catSize / 3;
     const mouseX = event.clientX;
     const mouseY = event.clientY;
     
@@ -143,7 +261,7 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
       setIsLookingAtMouse(false);
       setEyeDirection({ x: 0, y: 0 });
     }
-  }, [getRoomPosition]);
+  }, [getRoomPosition, catSize]);
 
   // Track mouse movement for eye reactions
   useEffect(() => {
@@ -343,8 +461,8 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         style={{ 
           x: getRoomPosition().x, 
           y: getRoomPosition().y,
-          width: 120, 
-          height: 120 
+          width: catSize, 
+          height: catSize 
         }}
         animate={catVariants[currentAnimation]}
         onClick={handleCatClick}
@@ -354,7 +472,8 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         {/* Cat Body */}
         <div className="relative w-full h-full">
           {/* Main Cat SVG */}
-          <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-lg">
+          <svg viewBox="0 0 120 120" className="w-full h-full drop-shadow-lg"
+               style={{ width: catSize, height: catSize }}>
             {/* Cat silhouette with quantum glow */}
             <defs>
               <filter id="quantumGlow">
@@ -440,7 +559,7 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         </div>
       </motion.div>
 
-      {/* Speech Bubble - Enhanced design with width constraint */}
+      {/* Speech Bubble - Enhanced positioning with UI collision avoidance */}
       <AnimatePresence>
         {showMessage && currentMessage && (
           <motion.div
@@ -449,9 +568,9 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             style={{
-              left: getRoomPosition().x + 140, // Position to the right of cat
-              top: Math.max(getRoomPosition().y - 20, 20),
-              maxWidth: '250px', // User requested 250px max width
+              left: getSpeechBubblePosition().x,
+              top: getSpeechBubblePosition().y,
+              maxWidth: '260px', // Updated to user requested 260px max width
               minWidth: '200px'
             }}
           >
@@ -459,12 +578,16 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
               {currentMessage}
             </div>
             
-            {/* Speech bubble tail - positioned for left-side cat */}
+            {/* Speech bubble tail - dynamically positioned based on cat location */}
             <div 
-              className="absolute w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-gray-600"
+              className="absolute w-0 h-0 border-transparent"
               style={{
-                left: -8,
+                left: getSpeechBubblePosition().x < getRoomPosition().x ? '100%' : -8,
                 top: 20,
+                borderLeftWidth: getSpeechBubblePosition().x < getRoomPosition().x ? 0 : 8,
+                borderRightWidth: getSpeechBubblePosition().x < getRoomPosition().x ? 8 : 8,
+                borderTopWidth: 8,
+                borderTopColor: '#4b5563'
               }}
             />
           </motion.div>
@@ -476,7 +599,7 @@ const CompanionCat: React.FC<CompanionCatProps> = ({
         <motion.button
           className="absolute bg-yellow-500/90 hover:bg-yellow-400/90 text-gray-900 px-3 py-1 rounded-full text-xs font-semibold pointer-events-auto"
           style={{
-            left: getRoomPosition().x + 60,
+            left: getRoomPosition().x + catSize / 2 - 30,
             top: getRoomPosition().y - 30,
           }}
           onClick={handleHintRequest}
