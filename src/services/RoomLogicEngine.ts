@@ -659,6 +659,247 @@ Your mission: Reconstruct the hidden quantum state and filter out decoherence no
   }
 }
 
+// Superposition Tower Logic Engine
+export class SuperpositionTowerEngine extends BaseRoomEngine {
+  private currentFloor = 0;
+  private selectedPath: number[] = [];
+  private quantumPads: any[] = [];
+  private floorPatterns = [
+    { required: [2], description: "Create superposition in the center pad" },
+    { required: [1, 3], description: "Two adjacent superposition states for constructive interference" },
+    { required: [0, 2, 4], description: "Alternating pattern creates stable quantum bridge" },
+    { required: [1, 2, 3], description: "Three consecutive pads form perfect interference pattern" },
+    { required: [0, 1, 3, 4], description: "Four-pad configuration for maximum quantum coherence" }
+  ];
+
+  constructor() {
+    super('superposition-tower');
+    this.conceptOrder = ['quantum-superposition', 'hadamard-gates', 'interference-patterns', 'quantum-coherence'];
+    this.logic.maxSteps = 5; // 5 floors
+  }
+
+  init(): void {
+    this.currentFloor = 0;
+    this.selectedPath = [];
+  }
+
+  validateAction(action: string, data?: any): InteractionResult {
+    this.logic.lastAction = action;
+
+    switch (action) {
+      case 'apply_hadamard':
+        return this.validateHadamardApplication(data);
+      case 'step_on_pad':
+        return this.validatePadStep(data);
+      case 'complete_floor':
+        return this.validateFloorCompletion(data);
+      default:
+        this.incrementMistakes();
+        return {
+          success: false,
+          conceptValidation: {
+            concept: 'unknown-action',
+            isValid: false,
+            feedback: 'Unknown action. Apply Hadamard gates to create superposition, then step on pads in sequence.',
+            hint: 'Start by applying Hadamard gates to classical states to create superposition.'
+          }
+        };
+    }
+  }
+
+  private validateHadamardApplication(data: any): InteractionResult {
+    if (!data || typeof data.padId !== 'number') {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'hadamard-gates',
+          isValid: false,
+          feedback: 'Invalid Hadamard gate application. Select a specific pad to apply the gate.',
+          hint: 'Hadamard gates create superposition: H|0⟩ = (|0⟩ + |1⟩)/√2',
+          educationalContent: 'The Hadamard gate is fundamental in quantum computing, creating equal superposition of basis states.'
+        }
+      };
+    }
+
+    this.learnConcept('hadamard-gates');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 1);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'hadamard-gates',
+        isValid: true,
+        feedback: `✅ Hadamard gate applied to Pad ${data.padId + 1}! Quantum superposition created.`,
+        educationalContent: 'You\'ve created a quantum superposition state where the qubit exists in both |0⟩ and |1⟩ simultaneously.'
+      },
+      nextStep: 'step_on_superposition_pads'
+    };
+  }
+
+  private validatePadStep(data: any): InteractionResult {
+    if (!data || typeof data.padId !== 'number' || data.padState !== 'superposition') {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'quantum-superposition',
+          isValid: false,
+          feedback: 'Can only step on pads in superposition state! Classical states cannot support quantum tunneling.',
+          hint: 'Apply Hadamard gates first to create superposition states.',
+          educationalContent: 'Quantum tunneling requires the particle to be in a superposition of position states.'
+        }
+      };
+    }
+
+    const pattern = this.floorPatterns[this.currentFloor];
+    if (!pattern.required.includes(data.padId)) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'interference-patterns',
+          isValid: false,
+          feedback: `❌ Wrong quantum path! Stepping on Pad ${data.padId + 1} creates destructive interference.`,
+          hint: `For Floor ${this.currentFloor + 1}, you need to step on: ${pattern.required.map(p => `Pad ${p + 1}`).join(', ')}`,
+          educationalContent: 'Quantum interference can be constructive (amplifying probability) or destructive (canceling it out).'
+        }
+      };
+    }
+
+    // Check sequence
+    const nextRequired = pattern.required[this.selectedPath.length];
+    if (data.padId !== nextRequired) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'quantum-coherence',
+          isValid: false,
+          feedback: `❌ Incorrect sequence! You must step on Pad ${nextRequired + 1} next to maintain coherence.`,
+          hint: 'Quantum coherence requires following the exact sequence for constructive interference.',
+          educationalContent: 'Quantum coherence is fragile and requires precise timing and sequencing to maintain.'
+        }
+      };
+    }
+
+    this.selectedPath.push(data.padId);
+    this.learnConcept('quantum-superposition');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 2);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'quantum-superposition',
+        isValid: true,
+        feedback: `✅ Successful quantum step! Path segment ${this.selectedPath.length}/${pattern.required.length} complete.`,
+        educationalContent: 'You\'ve successfully navigated a quantum superposition state, demonstrating wave-particle duality.'
+      },
+      nextStep: this.selectedPath.length === pattern.required.length ? 'complete_floor' : 'continue_path'
+    };
+  }
+
+  private validateFloorCompletion(data: any): InteractionResult {
+    const pattern = this.floorPatterns[this.currentFloor];
+    
+    if (this.selectedPath.length !== pattern.required.length) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'quantum-coherence',
+          isValid: false,
+          feedback: 'Incomplete quantum path. You must traverse all required superposition states.',
+          hint: 'Complete the full interference pattern for this floor.'
+        }
+      };
+    }
+
+    this.currentFloor++;
+    this.selectedPath = [];
+    this.learnConcept('interference-patterns');
+    
+    if (this.currentFloor >= 5) {
+      this.learnConcept('quantum-coherence');
+      this.logic.currentStep = 5;
+      this.logic.isConceptuallyComplete = true;
+      
+      return {
+        success: true,
+        conceptValidation: {
+          concept: 'quantum-coherence',
+          isValid: true,
+          feedback: '🎉 Superposition Tower conquered! You\'ve mastered quantum superposition and interference patterns!',
+          educationalContent: 'You\'ve demonstrated mastery of quantum superposition, Hadamard transformations, and coherent quantum navigation.'
+        },
+        roomComplete: true,
+        unlockNext: true
+      };
+    }
+
+    this.logic.currentStep = Math.max(this.logic.currentStep, 3);
+    
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'interference-patterns',
+        isValid: true,
+        feedback: `✅ Floor ${this.currentFloor} completed! Perfect interference pattern achieved. Proceeding to next floor.`,
+        educationalContent: `Floor ${this.currentFloor}: ${this.floorPatterns[this.currentFloor - 1].description}`
+      },
+      nextStep: 'next_floor'
+    };
+  }
+
+  getContextualHint(): EducationalHint {
+    if (this.logic.mistakeCount <= 1) {
+      return {
+        level: 'gentle',
+        message: 'Create superposition with Hadamard gates, then step only on superposition pads in the correct sequence.',
+        concept: 'superposition-basics'
+      };
+    } else if (this.logic.mistakeCount <= 3) {
+      return {
+        level: 'detailed',
+        message: `For Floor ${this.currentFloor + 1}: ${this.floorPatterns[this.currentFloor].description}. Apply H gates to the required pads first.`,
+        concept: 'quantum-interference',
+        action: `Create superposition on pads: ${this.floorPatterns[this.currentFloor].required.map(p => p + 1).join(', ')}`
+      };
+    } else {
+      return {
+        level: 'conceptual',
+        message: 'Quantum superposition allows particles to exist in multiple states. Use Hadamard gates to create superposition, then navigate the quantum bridge by stepping only on superposition states in the exact required sequence.',
+        concept: 'quantum-navigation',
+        action: 'Follow the exact sequence for constructive interference'
+      };
+    }
+  }
+
+  getConceptualIntroduction(): string {
+    return `🗼 **Quantum Superposition & Wave Interference**
+
+Welcome to the Superposition Tower! Master the quantum principle that allows particles to exist in multiple states simultaneously.
+
+**Key Concepts:**
+• Quantum superposition enables multiple simultaneous states
+• Hadamard gates create equal probability superpositions
+• Quantum interference can be constructive or destructive
+• Coherent quantum navigation requires precise sequencing
+
+Your mission: Use superposition and interference to create stable quantum bridges across 5 floors.`;
+  }
+
+  getStepInstructions(): string[] {
+    return [
+      '⚛️ Apply Hadamard gates to create quantum superposition states',
+      '🌊 Step only on superposition pads to enable quantum tunneling',
+      '🎯 Follow exact sequences to maintain constructive interference',
+      '🏗️ Complete quantum bridges across all 5 tower floors',
+      '🎉 Master quantum superposition and wave interference!'
+    ];
+  }
+}
+
 // Main Room Logic Engine Manager
 export class RoomLogicEngine {
   private engines: Map<Room, BaseRoomEngine> = new Map();
@@ -667,7 +908,10 @@ export class RoomLogicEngine {
     // Initialize all room engines
     this.engines.set('probability-bay', new ProbabilityBayEngine());
     this.engines.set('state-chamber', new StateChamberEngine());
-    // TODO: Add other room engines
+    this.engines.set('superposition-tower', new SuperpositionTowerEngine());
+    this.engines.set('entanglement-bridge', new EntanglementBridgeEngine());
+    this.engines.set('tunneling-vault', new TunnelingVaultEngine());
+    this.engines.set('quantum-archive', new QuantumArchiveEngine());
   }
 
   getEngine(room: Room): BaseRoomEngine | undefined {
