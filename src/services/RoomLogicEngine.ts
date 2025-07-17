@@ -900,6 +900,909 @@ Your mission: Use superposition and interference to create stable quantum bridge
   }
 }
 
+// Entanglement Bridge Logic Engine
+export class EntanglementBridgeEngine extends BaseRoomEngine {
+  private entangledPairs: Array<{id: number, partner: number, measured: boolean}> = [];
+  private measurementHistory: Array<{pairId: number, outcome: 'correlated' | 'uncorrelated'}> = [];
+  private correlationThreshold = 0.8;
+
+  constructor() {
+    super('entanglement-bridge');
+    this.conceptOrder = ['quantum-entanglement', 'bell-states', 'correlation-measurement', 'spooky-action'];
+    this.logic.maxSteps = 4;
+  }
+
+  init(): void {
+    // Initialize entangled pairs
+    this.entangledPairs = [
+      {id: 1, partner: 2, measured: false},
+      {id: 2, partner: 1, measured: false},
+      {id: 3, partner: 4, measured: false},
+      {id: 4, partner: 3, measured: false}
+    ];
+    this.measurementHistory = [];
+  }
+
+  validateAction(action: string, data?: any): InteractionResult {
+    this.logic.lastAction = action;
+
+    switch (action) {
+      case 'create_entanglement':
+        return this.validateEntanglementCreation(data);
+      case 'measure_particle':
+        return this.validateParticleMeasurement(data);
+      case 'verify_correlation':
+        return this.validateCorrelationVerification(data);
+      case 'activate_bridge':
+        return this.validateBridgeActivation(data);
+      default:
+        this.incrementMistakes();
+        return {
+          success: false,
+          conceptValidation: {
+            concept: 'unknown-action',
+            isValid: false,
+            feedback: 'Unknown action. Follow the quantum entanglement protocol.',
+            hint: 'Start by creating entangled particle pairs.'
+          }
+        };
+    }
+  }
+
+  private validateEntanglementCreation(data: any): InteractionResult {
+    if (!data || !data.particleIds || !Array.isArray(data.particleIds) || data.particleIds.length !== 2) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'quantum-entanglement',
+          isValid: false,
+          feedback: 'Invalid entanglement setup. Select exactly two particles to entangle.',
+          hint: 'Quantum entanglement requires exactly two particles to form a Bell state.',
+          educationalContent: 'Entanglement creates quantum correlation between particles, regardless of distance.'
+        }
+      };
+    }
+
+    const [id1, id2] = data.particleIds;
+    const pair1 = this.entangledPairs.find(p => p.id === id1);
+    const pair2 = this.entangledPairs.find(p => p.id === id2);
+
+    if (!pair1 || !pair2 || pair1.partner !== id2 || pair2.partner !== id1) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'bell-states',
+          isValid: false,
+          feedback: `❌ Particles ${id1} and ${id2} cannot be entangled. Check the predefined entangled pairs.`,
+          hint: 'Only specific particle pairs can be entangled based on their quantum properties.',
+          educationalContent: 'Bell states are maximally entangled quantum states of two qubits.'
+        }
+      };
+    }
+
+    this.learnConcept('quantum-entanglement');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 1);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'quantum-entanglement',
+        isValid: true,
+        feedback: `✅ Entanglement successful! Particles ${id1} and ${id2} are now in a Bell state.`,
+        educationalContent: 'You\'ve created quantum entanglement - Einstein\'s "spooky action at a distance"!'
+      },
+      nextStep: 'measure_particles'
+    };
+  }
+
+  private validateParticleMeasurement(data: any): InteractionResult {
+    if (!data || typeof data.particleId !== 'number') {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'correlation-measurement',
+          isValid: false,
+          feedback: 'Invalid measurement. Select a specific particle to measure.',
+          hint: 'Measuring one entangled particle instantly affects its partner.'
+        }
+      };
+    }
+
+    const particle = this.entangledPairs.find(p => p.id === data.particleId);
+    if (!particle) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'correlation-measurement',
+          isValid: false,
+          feedback: 'Particle not found. Select a valid entangled particle.',
+          hint: 'Choose from the available entangled particles.'
+        }
+      };
+    }
+
+    if (particle.measured) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'measurement-collapse',
+          isValid: false,
+          feedback: 'Particle already measured. Quantum measurement collapses the state permanently.',
+          hint: 'Each entangled particle can only be measured once.',
+          educationalContent: 'Quantum measurement is irreversible - it collapses the superposition state.'
+        }
+      };
+    }
+
+    // Simulate measurement with quantum correlation
+    const partner = this.entangledPairs.find(p => p.id === particle.partner);
+    const isCorrelated = Math.random() > 0.1; // 90% correlation for quantum entanglement
+
+    particle.measured = true;
+    if (partner) partner.measured = true;
+
+    this.measurementHistory.push({
+      pairId: Math.min(particle.id, particle.partner),
+      outcome: isCorrelated ? 'correlated' : 'uncorrelated'
+    });
+
+    this.learnConcept('correlation-measurement');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 2);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'correlation-measurement',
+        isValid: true,
+        feedback: `✅ Measurement complete! Particle ${data.particleId} measured, instantly affecting particle ${particle.partner}. Correlation: ${isCorrelated ? 'Strong' : 'Weak'}`,
+        educationalContent: 'Entangled particles show instant correlation regardless of distance - faster than light!'
+      },
+      nextStep: this.measurementHistory.length >= 2 ? 'verify_correlation' : 'continue_measuring'
+    };
+  }
+
+  private validateCorrelationVerification(data: any): InteractionResult {
+    if (this.measurementHistory.length < 2) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'statistical-correlation',
+          isValid: false,
+          feedback: 'Insufficient measurement data. Perform at least 2 entanglement measurements.',
+          hint: 'Statistical verification requires multiple measurement samples.',
+          educationalContent: 'Quantum correlation is verified through statistical analysis of multiple measurements.'
+        }
+      };
+    }
+
+    const correlatedCount = this.measurementHistory.filter(h => h.outcome === 'correlated').length;
+    const correlationRate = correlatedCount / this.measurementHistory.length;
+
+    if (correlationRate < this.correlationThreshold) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'spooky-action',
+          isValid: false,
+          feedback: `❌ Correlation rate too low: ${(correlationRate * 100).toFixed(1)}%. Quantum entanglement requires >80% correlation.`,
+          hint: 'True quantum entanglement shows strong statistical correlation. Try more measurements.',
+          educationalContent: 'Bell\'s theorem shows that quantum correlations exceed what classical physics allows.'
+        }
+      };
+    }
+
+    this.learnConcept('spooky-action');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 3);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'spooky-action',
+        isValid: true,
+        feedback: `✅ Strong quantum correlation verified: ${(correlationRate * 100).toFixed(1)}%! Einstein's "spooky action at a distance" confirmed.`,
+        educationalContent: 'You\'ve demonstrated that entangled particles are more correlated than classical physics allows!'
+      },
+      nextStep: 'activate_bridge'
+    };
+  }
+
+  private validateBridgeActivation(data: any): InteractionResult {
+    const correlatedCount = this.measurementHistory.filter(h => h.outcome === 'correlated').length;
+    const correlationRate = correlatedCount / this.measurementHistory.length;
+
+    if (correlationRate < this.correlationThreshold) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'quantum-teleportation',
+          isValid: false,
+          feedback: 'Insufficient quantum correlation for bridge activation. Strengthen entanglement first.',
+          hint: 'The quantum bridge requires strong entanglement correlation >80%.'
+        }
+      };
+    }
+
+    this.logic.currentStep = 4;
+    this.logic.isConceptuallyComplete = true;
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'quantum-teleportation',
+        isValid: true,
+        feedback: '🎉 Quantum bridge activated! You\'ve mastered entanglement and demonstrated spooky action at a distance!',
+        educationalContent: 'You\'ve successfully demonstrated quantum entanglement, correlation measurement, and the foundations of quantum teleportation!'
+      },
+      roomComplete: true,
+      unlockNext: true
+    };
+  }
+
+  getContextualHint(): EducationalHint {
+    if (this.logic.mistakeCount <= 1) {
+      return {
+        level: 'gentle',
+        message: 'Create entangled pairs, then measure one particle to instantly affect its partner.',
+        concept: 'entanglement-basics'
+      };
+    } else if (this.logic.mistakeCount <= 3) {
+      return {
+        level: 'detailed',
+        message: 'Entangled particles show >80% correlation. Measure multiple pairs and verify the statistical correlation.',
+        concept: 'quantum-correlation',
+        action: 'Measure at least 2 entangled pairs and check correlation rate'
+      };
+    } else {
+      return {
+        level: 'conceptual',
+        message: 'Quantum entanglement creates instant correlation between particles regardless of distance. This violates classical locality but is fundamental to quantum mechanics.',
+        concept: 'bell-nonlocality',
+        action: 'Create entanglement, measure particles, verify >80% correlation'
+      };
+    }
+  }
+
+  getConceptualIntroduction(): string {
+    return `🌉 **Quantum Entanglement & Bell States**
+
+Welcome to the Entanglement Bridge! Discover the mysterious quantum phenomenon that Einstein called "spooky action at a distance."
+
+**Key Concepts:**
+• Quantum entanglement creates instant correlations
+• Bell states are maximally entangled quantum states
+• Measurement of one particle instantly affects its partner
+• Quantum correlations exceed classical physics limits
+
+Your mission: Create entangled pairs and demonstrate spooky quantum correlations.`;
+  }
+
+  getStepInstructions(): string[] {
+    return [
+      '⚛️ Create entangled particle pairs in Bell states',
+      '📡 Measure one particle in each entangled pair',
+      '📊 Verify quantum correlation >80% between partners',
+      '🌉 Activate the quantum bridge using entanglement',
+      '🎉 Master spooky action at a distance!'
+    ];
+  }
+}
+
+// Tunneling Vault Logic Engine
+export class TunnelingVaultEngine extends BaseRoomEngine {
+  private barriers: Array<{id: number, height: number, width: number, penetrated: boolean}> = [];
+  private particleEnergy = 0;
+  private tunnelingAttempts = 0;
+  private successfulTunneling = 0;
+
+  constructor() {
+    super('tunneling-vault');
+    this.conceptOrder = ['wave-particle-duality', 'barrier-penetration', 'tunneling-probability', 'quantum-mechanics'];
+    this.logic.maxSteps = 4;
+  }
+
+  init(): void {
+    this.barriers = [
+      {id: 1, height: 5, width: 2, penetrated: false},
+      {id: 2, height: 8, width: 3, penetrated: false},
+      {id: 3, height: 12, width: 4, penetrated: false}
+    ];
+    this.particleEnergy = 0;
+    this.tunnelingAttempts = 0;
+    this.successfulTunneling = 0;
+  }
+
+  validateAction(action: string, data?: any): InteractionResult {
+    this.logic.lastAction = action;
+
+    switch (action) {
+      case 'adjust_energy':
+        return this.validateEnergyAdjustment(data);
+      case 'attempt_tunneling':
+        return this.validateTunnelingAttempt(data);
+      case 'analyze_probability':
+        return this.validateProbabilityAnalysis(data);
+      case 'unlock_vault':
+        return this.validateVaultUnlock(data);
+      default:
+        this.incrementMistakes();
+        return {
+          success: false,
+          conceptValidation: {
+            concept: 'unknown-action',
+            isValid: false,
+            feedback: 'Unknown action. Follow the quantum tunneling protocol.',
+            hint: 'Start by adjusting particle energy for tunneling attempts.'
+          }
+        };
+    }
+  }
+
+  private validateEnergyAdjustment(data: any): InteractionResult {
+    if (!data || typeof data.energy !== 'number' || data.energy < 0 || data.energy > 20) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'particle-energy',
+          isValid: false,
+          feedback: 'Invalid energy setting. Energy must be between 0 and 20 units.',
+          hint: 'Particle energy affects tunneling probability through barriers.',
+          educationalContent: 'In quantum mechanics, particle energy influences but doesn\'t completely determine barrier penetration.'
+        }
+      };
+    }
+
+    this.particleEnergy = data.energy;
+    this.learnConcept('wave-particle-duality');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 1);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'wave-particle-duality',
+        isValid: true,
+        feedback: `✅ Particle energy set to ${data.energy} units. Ready for quantum tunneling attempts.`,
+        educationalContent: 'Quantum particles exhibit wave properties that allow them to "tunnel" through energy barriers.'
+      },
+      nextStep: 'attempt_tunneling'
+    };
+  }
+
+  private validateTunnelingAttempt(data: any): InteractionResult {
+    if (!data || typeof data.barrierId !== 'number') {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'barrier-penetration',
+          isValid: false,
+          feedback: 'Invalid tunneling attempt. Select a specific barrier.',
+          hint: 'Choose which barrier to attempt quantum tunneling through.'
+        }
+      };
+    }
+
+    if (this.particleEnergy === 0) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'energy-requirement',
+          isValid: false,
+          feedback: 'No particle energy set. Adjust energy before attempting tunneling.',
+          hint: 'Set particle energy first, then attempt tunneling.',
+          educationalContent: 'Even quantum tunneling requires some initial particle energy.'
+        }
+      };
+    }
+
+    const barrier = this.barriers.find(b => b.id === data.barrierId);
+    if (!barrier) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'barrier-selection',
+          isValid: false,
+          feedback: 'Barrier not found. Select a valid barrier.',
+          hint: 'Choose from the available energy barriers.'
+        }
+      };
+    }
+
+    // Calculate tunneling probability based on quantum mechanics
+    const transmissionCoeff = Math.exp(-2 * Math.sqrt(2 * (barrier.height - this.particleEnergy) * barrier.width));
+    const tunnelingProbability = this.particleEnergy >= barrier.height ? 1 : transmissionCoeff;
+    const success = Math.random() < tunnelingProbability;
+
+    this.tunnelingAttempts++;
+    if (success) {
+      this.successfulTunneling++;
+      barrier.penetrated = true;
+    }
+
+    this.learnConcept('barrier-penetration');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 2);
+
+    return {
+      success,
+      conceptValidation: {
+        concept: 'barrier-penetration',
+        isValid: success,
+        feedback: success 
+          ? `✅ Quantum tunneling successful! Particle penetrated barrier ${data.barrierId} (height: ${barrier.height}, width: ${barrier.width})`
+          : `❌ Tunneling failed. Probability was ${(tunnelingProbability * 100).toFixed(1)}% for barrier ${data.barrierId}`,
+        hint: success ? 'Try tunneling through more barriers!' : 'Higher energy increases tunneling probability, but quantum tunneling can occur even with low energy.',
+        educationalContent: success 
+          ? 'Quantum tunneling allows particles to pass through barriers they classically cannot overcome!'
+          : 'Quantum tunneling is probabilistic - sometimes it fails even with good conditions.'
+      },
+      nextStep: this.tunnelingAttempts >= 5 ? 'analyze_probability' : 'continue_tunneling'
+    };
+  }
+
+  private validateProbabilityAnalysis(data: any): InteractionResult {
+    if (this.tunnelingAttempts < 5) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'statistical-analysis',
+          isValid: false,
+          feedback: 'Insufficient tunneling data. Perform at least 5 tunneling attempts.',
+          hint: 'Quantum probability analysis requires multiple experimental trials.',
+          educationalContent: 'Quantum mechanics is probabilistic - we need statistics to understand the behavior.'
+        }
+      };
+    }
+
+    const successRate = this.successfulTunneling / this.tunnelingAttempts;
+    const expectedRate = 0.3; // Reasonable quantum tunneling rate
+
+    if (Math.abs(successRate - expectedRate) > 0.4) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'quantum-probability',
+          isValid: false,
+          feedback: `Unusual tunneling statistics: ${(successRate * 100).toFixed(1)}% success rate. Try different energy levels.`,
+          hint: 'Quantum tunneling probability depends on particle energy and barrier properties.',
+          educationalContent: 'Tunneling probability follows quantum mechanical predictions based on wave function penetration.'
+        }
+      };
+    }
+
+    this.learnConcept('tunneling-probability');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 3);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'tunneling-probability',
+        isValid: true,
+        feedback: `✅ Quantum probability analysis complete! Success rate: ${(successRate * 100).toFixed(1)}% matches quantum predictions.`,
+        educationalContent: 'You\'ve demonstrated the probabilistic nature of quantum tunneling - a key quantum mechanical phenomenon!'
+      },
+      nextStep: 'unlock_vault'
+    };
+  }
+
+  private validateVaultUnlock(data: any): InteractionResult {
+    const requiredPenetrations = this.barriers.filter(b => b.penetrated).length;
+    
+    if (requiredPenetrations < 2) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'vault-security',
+          isValid: false,
+          feedback: `Insufficient barrier penetrations: ${requiredPenetrations}/2. The vault requires at least 2 successful tunneling events.`,
+          hint: 'Successfully tunnel through at least 2 different barriers to unlock the vault.',
+          educationalContent: 'Quantum security requires demonstrating reliable tunneling capability.'
+        }
+      };
+    }
+
+    this.learnConcept('quantum-mechanics');
+    this.logic.currentStep = 4;
+    this.logic.isConceptuallyComplete = true;
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'quantum-mechanics',
+        isValid: true,
+        feedback: '🎉 Quantum vault unlocked! You\'ve mastered tunneling and demonstrated quantum mechanical behavior!',
+        educationalContent: 'You\'ve successfully applied quantum tunneling - a phenomenon that enables many modern technologies!'
+      },
+      roomComplete: true,
+      unlockNext: true
+    };
+  }
+
+  getContextualHint(): EducationalHint {
+    if (this.logic.mistakeCount <= 1) {
+      return {
+        level: 'gentle',
+        message: 'Set particle energy, then attempt tunneling through barriers. Even low energy can sometimes succeed!',
+        concept: 'tunneling-basics'
+      };
+    } else if (this.logic.mistakeCount <= 3) {
+      return {
+        level: 'detailed',
+        message: 'Tunneling probability depends on barrier height and width. Try different energies and analyze the success patterns.',
+        concept: 'quantum-tunneling',
+        action: 'Attempt tunneling with various energies, analyze success rate'
+      };
+    } else {
+      return {
+        level: 'conceptual',
+        message: 'Quantum tunneling allows particles to penetrate barriers they classically cannot overcome. The probability depends on the particle\'s wave function and barrier properties.',
+        concept: 'wave-function-penetration',
+        action: 'Successfully tunnel through 2+ barriers with proper energy settings'
+      };
+    }
+  }
+
+  getConceptualIntroduction(): string {
+    return `🔐 **Quantum Tunneling & Wave Mechanics**
+
+Welcome to the Tunneling Vault! Explore the quantum phenomenon that allows particles to pass through seemingly impossible barriers.
+
+**Key Concepts:**
+• Quantum particles have wave properties
+• Tunneling probability depends on energy and barrier dimensions
+• Quantum mechanics is fundamentally probabilistic
+• Wave function penetration enables barrier crossing
+
+Your mission: Master quantum tunneling to unlock the vault's quantum security system.`;
+  }
+
+  getStepInstructions(): string[] {
+    return [
+      '⚡ Adjust particle energy for optimal tunneling conditions',
+      '🚧 Attempt quantum tunneling through various barriers',
+      '📊 Analyze tunneling probability and success patterns',
+      '🔓 Successfully penetrate at least 2 barriers',
+      '🎉 Unlock the vault using quantum mechanics!'
+    ];
+  }
+}
+
+// Quantum Archive Logic Engine
+export class QuantumArchiveEngine extends BaseRoomEngine {
+  private documents: Array<{id: number, encrypted: boolean, algorithm: string, decoded: boolean}> = [];
+  private cryptographicKeys: Array<{type: 'classical' | 'quantum', strength: number, used: boolean}> = [];
+  private decodingAttempts = 0;
+
+  constructor() {
+    super('quantum-archive');
+    this.conceptOrder = ['quantum-cryptography', 'quantum-key-distribution', 'information-security', 'quantum-computing'];
+    this.logic.maxSteps = 4;
+  }
+
+  init(): void {
+    this.documents = [
+      {id: 1, encrypted: true, algorithm: 'RSA-256', decoded: false},
+      {id: 2, encrypted: true, algorithm: 'Quantum-QKD', decoded: false},
+      {id: 3, encrypted: true, algorithm: 'AES-512', decoded: false}
+    ];
+    this.cryptographicKeys = [
+      {type: 'classical', strength: 256, used: false},
+      {type: 'quantum', strength: 1024, used: false},
+      {type: 'classical', strength: 512, used: false}
+    ];
+    this.decodingAttempts = 0;
+  }
+
+  validateAction(action: string, data?: any): InteractionResult {
+    this.logic.lastAction = action;
+
+    switch (action) {
+      case 'analyze_encryption':
+        return this.validateEncryptionAnalysis(data);
+      case 'generate_quantum_key':
+        return this.validateQuantumKeyGeneration(data);
+      case 'attempt_decryption':
+        return this.validateDecryptionAttempt(data);
+      case 'access_archive':
+        return this.validateArchiveAccess(data);
+      default:
+        this.incrementMistakes();
+        return {
+          success: false,
+          conceptValidation: {
+            concept: 'unknown-action',
+            isValid: false,
+            feedback: 'Unknown action. Follow the quantum cryptography protocol.',
+            hint: 'Start by analyzing the encrypted documents.'
+          }
+        };
+    }
+  }
+
+  private validateEncryptionAnalysis(data: any): InteractionResult {
+    if (!data || typeof data.documentId !== 'number') {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'cryptographic-analysis',
+          isValid: false,
+          feedback: 'Invalid analysis request. Select a specific document to analyze.',
+          hint: 'Choose which encrypted document to examine.',
+          educationalContent: 'Cryptographic analysis reveals the type of encryption protecting the data.'
+        }
+      };
+    }
+
+    const document = this.documents.find(d => d.id === data.documentId);
+    if (!document) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'document-selection',
+          isValid: false,
+          feedback: 'Document not found. Select a valid encrypted document.',
+          hint: 'Choose from the available archived documents.'
+        }
+      };
+    }
+
+    this.learnConcept('quantum-cryptography');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 1);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'quantum-cryptography',
+        isValid: true,
+        feedback: `✅ Document ${data.documentId} analyzed: ${document.algorithm} encryption detected. ${document.algorithm.includes('Quantum') ? 'Quantum-secure encryption!' : 'Classical encryption - vulnerable to quantum attacks.'}`,
+        educationalContent: document.algorithm.includes('Quantum') 
+          ? 'Quantum encryption uses the laws of physics for unbreakable security!'
+          : 'Classical encryption relies on mathematical complexity, vulnerable to quantum computers.'
+      },
+      nextStep: 'generate_quantum_keys'
+    };
+  }
+
+  private validateQuantumKeyGeneration(data: any): InteractionResult {
+    if (!data || !['bb84', 'e91', 'sarg04'].includes(data.protocol)) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'quantum-key-distribution',
+          isValid: false,
+          feedback: 'Invalid QKD protocol. Choose BB84, E91, or SARG04 quantum key distribution protocol.',
+          hint: 'Quantum Key Distribution protocols use quantum mechanics for secure key exchange.',
+          educationalContent: 'QKD protocols like BB84 use quantum properties to detect eavesdropping and ensure security.'
+        }
+      };
+    }
+
+    // Find available quantum key
+    const quantumKey = this.cryptographicKeys.find(k => k.type === 'quantum' && !k.used);
+    if (!quantumKey) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'key-availability',
+          isValid: false,
+          feedback: 'No quantum keys available. All quantum keys have been used.',
+          hint: 'Quantum keys can only be used once due to the no-cloning theorem.',
+          educationalContent: 'The quantum no-cloning theorem prevents copying quantum states, making keys single-use.'
+        }
+      };
+    }
+
+    quantumKey.used = true;
+    this.learnConcept('quantum-key-distribution');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 2);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'quantum-key-distribution',
+        isValid: true,
+        feedback: `✅ Quantum key generated using ${data.protocol.toUpperCase()} protocol! Key strength: ${quantumKey.strength} qubits.`,
+        educationalContent: 'You\'ve created an unbreakable quantum key using the fundamental laws of physics!'
+      },
+      nextStep: 'attempt_decryption'
+    };
+  }
+
+  private validateDecryptionAttempt(data: any): InteractionResult {
+    if (!data || typeof data.documentId !== 'number' || typeof data.keyType !== 'string') {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'decryption-process',
+          isValid: false,
+          feedback: 'Invalid decryption attempt. Specify document ID and key type.',
+          hint: 'Select which document to decrypt and which type of key to use.',
+          educationalContent: 'Decryption requires matching the correct key type to the encryption algorithm.'
+        }
+      };
+    }
+
+    const document = this.documents.find(d => d.id === data.documentId);
+    if (!document) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'document-validation',
+          isValid: false,
+          feedback: 'Document not found. Select a valid encrypted document.',
+          hint: 'Choose from the available archived documents.'
+        }
+      };
+    }
+
+    if (document.decoded) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'decryption-state',
+          isValid: false,
+          feedback: 'Document already decoded. Each document can only be decrypted once.',
+          hint: 'Try decrypting other encrypted documents.',
+          educationalContent: 'In quantum cryptography, successful decryption often destroys the quantum state.'
+        }
+      };
+    }
+
+    const key = this.cryptographicKeys.find(k => k.type === data.keyType && !k.used);
+    if (!key) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'key-management',
+          isValid: false,
+          feedback: `No available ${data.keyType} keys. Generate new keys or use different key type.`,
+          hint: 'Check which keys are still available for use.',
+          educationalContent: 'Quantum key management is crucial for maintaining cryptographic security.'
+        }
+      };
+    }
+
+    this.decodingAttempts++;
+
+    // Check if key type matches document algorithm
+    const isQuantumDoc = document.algorithm.includes('Quantum');
+    const isQuantumKey = data.keyType === 'quantum';
+    const isMatch = isQuantumDoc === isQuantumKey;
+
+    if (!isMatch) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'cryptographic-compatibility',
+          isValid: false,
+          feedback: `❌ Key mismatch! ${document.algorithm} encryption requires ${isQuantumDoc ? 'quantum' : 'classical'} keys.`,
+          hint: 'Match quantum keys with quantum encryption, classical keys with classical encryption.',
+          educationalContent: 'Cryptographic security depends on using the correct key type for each encryption algorithm.'
+        }
+      };
+    }
+
+    key.used = true;
+    document.decoded = true;
+    this.learnConcept('information-security');
+    this.logic.currentStep = Math.max(this.logic.currentStep, 3);
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'information-security',
+        isValid: true,
+        feedback: `✅ Document ${data.documentId} successfully decrypted using ${data.keyType} key! Archive access granted.`,
+        educationalContent: 'You\'ve demonstrated proper quantum cryptographic security protocols!'
+      },
+      nextStep: this.documents.filter(d => d.decoded).length >= 2 ? 'access_archive' : 'continue_decrypting'
+    };
+  }
+
+  private validateArchiveAccess(data: any): InteractionResult {
+    const decodedCount = this.documents.filter(d => d.decoded).length;
+    
+    if (decodedCount < 2) {
+      this.incrementMistakes();
+      return {
+        success: false,
+        conceptValidation: {
+          concept: 'archive-security',
+          isValid: false,
+          feedback: `Insufficient access credentials: ${decodedCount}/2 documents decoded. Archive requires at least 2 successful decryptions.`,
+          hint: 'Decode more documents to gain full archive access.',
+          educationalContent: 'Quantum archives use multi-factor authentication based on cryptographic proof.'
+        }
+      };
+    }
+
+    this.learnConcept('quantum-computing');
+    this.logic.currentStep = 4;
+    this.logic.isConceptuallyComplete = true;
+
+    return {
+      success: true,
+      conceptValidation: {
+        concept: 'quantum-computing',
+        isValid: true,
+        feedback: '🎉 Quantum Archive unlocked! You\'ve mastered quantum cryptography and information security!',
+        educationalContent: 'You\'ve successfully demonstrated quantum cryptography, key distribution, and secure information access!'
+      },
+      roomComplete: true,
+      unlockNext: true
+    };
+  }
+
+  getContextualHint(): EducationalHint {
+    if (this.logic.mistakeCount <= 1) {
+      return {
+        level: 'gentle',
+        message: 'Analyze documents to understand their encryption, then generate appropriate quantum keys.',
+        concept: 'cryptography-basics'
+      };
+    } else if (this.logic.mistakeCount <= 3) {
+      return {
+        level: 'detailed',
+        message: 'Match quantum keys with quantum-encrypted documents, classical keys with classical encryption. Generate keys using QKD protocols.',
+        concept: 'quantum-cryptography',
+        action: 'Use BB84, E91, or SARG04 protocols for quantum key generation'
+      };
+    } else {
+      return {
+        level: 'conceptual',
+        message: 'Quantum cryptography uses physical laws for security. Quantum keys are unbreakable but single-use. Match key types to encryption algorithms for successful decryption.',
+        concept: 'quantum-information-security',
+        action: 'Generate quantum keys and decrypt at least 2 documents'
+      };
+    }
+  }
+
+  getConceptualIntroduction(): string {
+    return `📚 **Quantum Cryptography & Information Security**
+
+Welcome to the Quantum Archive! Master the art of quantum-secure information protection and cryptographic protocols.
+
+**Key Concepts:**
+• Quantum cryptography uses physics for unbreakable security
+• Quantum Key Distribution (QKD) enables secure key exchange
+• Classical encryption is vulnerable to quantum attacks
+• Quantum keys are single-use due to no-cloning theorem
+
+Your mission: Decrypt archived documents using proper quantum cryptographic protocols.`;
+  }
+
+  getStepInstructions(): string[] {
+    return [
+      '🔍 Analyze encrypted documents and their algorithms',
+      '🔑 Generate quantum keys using QKD protocols (BB84/E91/SARG04)',
+      '🔓 Decrypt documents with matching key types',
+      '📖 Successfully decode at least 2 secure documents',
+      '🎉 Unlock the quantum archive with cryptographic mastery!'
+    ];
+  }
+}
+
 // Main Room Logic Engine Manager
 export class RoomLogicEngine {
   private engines: Map<Room, BaseRoomEngine> = new Map();
