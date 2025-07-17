@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Compass, Zap, Timer, AlertTriangle } from 'lucide-react';
+import { Compass, Zap, Timer, AlertTriangle, Target, BookOpen, Lightbulb, CheckCircle } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import { CatReactionTriggers } from '../../types/game';
+import { roomLogicEngine } from '../../services/RoomLogicEngine';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Add global type declarations for Blochy libraries
 declare global {
@@ -35,7 +38,11 @@ function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-const StateChambrer: React.FC = () => {
+interface StateChambrerProps {
+  catReactionTriggers?: CatReactionTriggers;
+}
+
+const StateChambrer: React.FC<StateChambrerProps> = ({ catReactionTriggers }) => {
   const { completeRoom } = useGame();
   const [measurements, setMeasurements] = useState({ x: 0, y: 0, z: 0 });
   const [measurementCount, setMeasurementCount] = useState({ x: 0, y: 0, z: 0 });
@@ -43,6 +50,14 @@ const StateChambrer: React.FC = () => {
   const [decoherenceLevel, setDecoherenceLevel] = useState(0.8);
   const [noiseFilter, setNoiseFilter] = useState(0);
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes
+  
+  // Enhanced learning state with RoomLogicEngine  
+  const [showConceptIntro, setShowConceptIntro] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [feedback, setFeedback] = useState<string>('');
+  const [showEducationalContent, setShowEducationalContent] = useState(false);
+  const [conceptsLearned, setConceptsLearned] = useState<string[]>([]);
+  const [needsHint, setNeedsHint] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [roomCompleted, setRoomCompleted] = useState(false);
   const [showDecoherence, setShowDecoherence] = useState(false);
@@ -104,6 +119,11 @@ const StateChambrer: React.FC = () => {
   
   // Load Blochy scripts and initialize Bloch sphere with proper error handling
   useEffect(() => {
+    // Initialize room logic engine
+    roomLogicEngine.initializeRoom('state-chamber');
+    // Trigger cat entry reaction
+    catReactionTriggers?.onRoomAction?.('room-entered');
+    
     const loadScripts = async () => {
       try {
         // Add CSS for zero-lag slider first
@@ -236,20 +256,63 @@ const StateChambrer: React.FC = () => {
   }, []);
 
   const performMeasurement = (axis: 'x' | 'y' | 'z') => {
+    // Enhanced validation with RoomLogicEngine
+    const validationResult = roomLogicEngine.validateRoomAction('state-chamber', 'measure_axis', { axis });
+    
+    if (validationResult) {
+      setFeedback(validationResult.conceptValidation.feedback);
+      if (validationResult.conceptValidation.educationalContent) {
+        setShowEducationalContent(true);
+      }
+      
+      if (!validationResult.success) {
+        setNeedsHint(true);
+        return;
+      }
+    }
+
     if (measurementCount[axis] >= 3) return;
 
+    // Trigger cat reaction for measurement action
+    catReactionTriggers?.onMeasureClick?.();
+
     const noise = (Math.random() - 0.5) * 0.2;
-    const measurement = targetState[axis] + noise;
+    const measurement = 0.6 + noise; // Hidden target state component
     
     setMeasurements(prev => ({ ...prev, [axis]: measurement }));
     setMeasurementCount(prev => ({ ...prev, [axis]: prev[axis] + 1 }));
     
-    if (!isActive && (measurementCount.x + measurementCount.y + measurementCount.z) === 0) {
+    // Update learning progress
+    const totalMeasurements = Object.values(measurementCount).reduce((a, b) => a + b, 0) + 1;
+    if (totalMeasurements >= 3 && !conceptsLearned.includes('quantum-measurement')) {
+      setConceptsLearned(prev => [...prev, 'quantum-measurement']);
+      setCurrentStep(Math.max(currentStep, 1));
+    }
+    
+    if (!isActive && totalMeasurements === 1) {
       setIsActive(true);
     }
   };
 
   const reconstructState = () => {
+    // Enhanced validation with RoomLogicEngine
+    const validationResult = roomLogicEngine.validateRoomAction('state-chamber', 'reconstruct_state', {
+      measurements: measurements,
+      measurementCounts: measurementCount
+    });
+    
+    if (validationResult) {
+      setFeedback(validationResult.conceptValidation.feedback);
+      if (validationResult.conceptValidation.educationalContent) {
+        setShowEducationalContent(true);
+      }
+      
+      if (!validationResult.success) {
+        setNeedsHint(true);
+        return;
+      }
+    }
+
     const reconstructed: BlochVector = {
       x: measurements.x,
       y: measurements.y,
@@ -258,11 +321,17 @@ const StateChambrer: React.FC = () => {
     
     setReconstructedState(reconstructed);
     
-    // Check if reconstruction is close to target
+    // Update learning progress
+    if (!conceptsLearned.includes('state-reconstruction')) {
+      setConceptsLearned(prev => [...prev, 'state-reconstruction']);
+      setCurrentStep(Math.max(currentStep, 2));
+    }
+    
+    // Check if reconstruction is close to target (for educational feedback)
     const distance = Math.sqrt(
-      Math.pow(reconstructed.x - targetState.x, 2) +
-      Math.pow(reconstructed.y - targetState.y, 2) +
-      Math.pow(reconstructed.z - targetState.z, 2)
+      Math.pow(reconstructed.x - 0.6, 2) +
+      Math.pow(reconstructed.y - 0.8, 2) +
+      Math.pow(reconstructed.z - 0.2, 2)
     );
     
     if (distance < 0.3) {
@@ -274,29 +343,54 @@ const StateChambrer: React.FC = () => {
   setIsFilterApplying(true);
 
   setTimeout(() => {
-    // Apply the noise filter by scaling the vector
-    const cleaned: BlochVector = {
-      x: reconstructedState.x * noiseFilter,
-      y: reconstructedState.y * noiseFilter,
-      z: reconstructedState.z * noiseFilter,
-    };
-
-    // Update the reconstructed state
-    setReconstructedState(cleaned);
-
-    //  Check if the cleaned state is "pure" enough
-    const magnitude = Math.sqrt(
-      cleaned.x ** 2 + cleaned.y ** 2 + cleaned.z ** 2
-    );
-
-    if (magnitude > 0.9 && magnitude < 1.1) {
-      setRoomCompleted(true);
-      completeRoom('state-chamber');
+    // Enhanced validation with RoomLogicEngine
+    const validationResult = roomLogicEngine.validateRoomAction('state-chamber', 'apply_filter', {
+      filterStrength: noiseFilter,
+      reconstructedState: reconstructedState
+    });
+    
+    if (validationResult) {
+      setFeedback(validationResult.conceptValidation.feedback);
+      if (validationResult.conceptValidation.educationalContent) {
+        setShowEducationalContent(true);
+      }
+      
+      if (validationResult.success && validationResult.roomComplete) {
+        setRoomCompleted(true);
+        setCurrentStep(4);
+        
+        // Update learning progress
+        if (!conceptsLearned.includes('decoherence-filtering')) {
+          setConceptsLearned(prev => [...prev, 'decoherence-filtering']);
+        }
+        
+        // Trigger cat success reaction
+        catReactionTriggers?.onSuccess?.();
+        
+        completeRoom('state-chamber');
+      } else if (!validationResult.success) {
+        setNeedsHint(true);
+      }
     }
 
     setIsFilterApplying(false);
   }, 1000);
 };
+
+  // Helper function to get educational hint
+  const getHint = () => {
+    const hint = roomLogicEngine.getRoomHint('state-chamber');
+    if (hint) {
+      setFeedback(hint.message);
+      setShowEducationalContent(true);
+    }
+  };
+
+  const getStepIcon = (step: number) => {
+    if (currentStep > step) return <CheckCircle className="w-5 h-5 text-green-400" />;
+    if (currentStep === step) return <Target className="w-5 h-5 text-blue-400 animate-pulse" />;
+    return <div className="w-5 h-5 rounded-full border-2 border-gray-600"></div>;
+  };
 
   const getBlochSphereColor = () => {
     if (showDecoherence && noiseFilter < 0.7) {
@@ -370,7 +464,159 @@ const StateChambrer: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900/20 to-violet-900/20 p-6">
+      
+      {/* 📚 Conceptual Introduction Modal */}
+      <AnimatePresence>
+        {showConceptIntro && (
+          <motion.div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="bg-gray-900/95 rounded-2xl border border-purple-500 max-w-4xl w-full p-8"
+            >
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-4">🔮</div>
+                <h2 className="text-2xl font-bold text-purple-400 mb-4">Quantum State Analysis & Bloch Sphere Theory</h2>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div className="bg-purple-900/30 border border-purple-500 rounded-xl p-4">
+                  <h3 className="font-semibold text-purple-300 mb-2">🔬 What You'll Learn</h3>
+                  <div className="text-purple-200 text-sm space-y-2">
+                    <p>• How quantum states are represented in 3D space (Bloch sphere)</p>
+                    <p>• The relationship between measurement and state reconstruction</p>
+                    <p>• How decoherence affects quantum information</p>
+                    <p>• Techniques for purifying quantum states through filtering</p>
+                  </div>
+                </div>
+
+                <div className="bg-blue-900/30 border border-blue-500 rounded-xl p-4">
+                  <h3 className="font-semibold text-blue-300 mb-2">🎯 Learning Objectives</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Target className="w-4 h-4 text-blue-400" />
+                        <span className="text-blue-200">Quantum Measurement Theory</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Target className="w-4 h-4 text-blue-400" />
+                        <span className="text-blue-200">Bloch Sphere Representation</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Target className="w-4 h-4 text-blue-400" />
+                        <span className="text-blue-200">State Reconstruction Methods</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Target className="w-4 h-4 text-blue-400" />
+                        <span className="text-blue-200">Decoherence Filtering Techniques</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-green-900/30 border border-green-500 rounded-xl p-4">
+                  <h3 className="font-semibold text-green-300 mb-2">📚 The Challenge</h3>
+                  <p className="text-green-200 text-sm">
+                    A hidden quantum state has been corrupted by environmental noise. Use precise measurements 
+                    along X, Y, and Z axes to reconstruct the state vector, then apply decoherence filtering 
+                    to purify it back to a pure quantum state (magnitude ≈ 1).
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowConceptIntro(false)}
+                className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
+              >
+                Begin Quantum State Analysis!
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ❓ Floating Help Button */}
+      {!showConceptIntro && (
+        <button
+          onClick={() => setShowConceptIntro(true)}
+          className="fixed bottom-6 right-6 z-40 bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-full shadow-xl text-xl"
+        >
+          <BookOpen className="w-6 h-6" />
+        </button>
+      )}
+
       <div className="max-w-6xl mx-auto">
+        {/* 📊 Learning Progress Panel */}
+        <div className="mb-8 bg-gray-800/30 backdrop-blur-sm rounded-2xl border border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center">
+              <Target className="w-5 h-5 mr-2 text-purple-400" />
+              Quantum State Learning Progress
+            </h2>
+            {needsHint && (
+              <button
+                onClick={getHint}
+                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-sm font-semibold flex items-center space-x-2"
+              >
+                <Lightbulb className="w-4 h-4" />
+                <span>Need Help?</span>
+              </button>
+            )}
+          </div>
+
+          {/* Step Progress */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            {['Quantum Measurement', 'Bloch Sphere', 'State Reconstruction', 'Decoherence Filtering'].map((step, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                {getStepIcon(index)}
+                <span className={`text-sm ${currentStep > index ? 'text-green-400' : currentStep === index ? 'text-purple-400' : 'text-gray-400'}`}>
+                  {step}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Concepts Learned */}
+          {conceptsLearned.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-green-400 mb-2">Concepts Mastered:</h3>
+              <div className="flex flex-wrap gap-2">
+                {conceptsLearned.map((concept, index) => (
+                  <span key={index} className="px-3 py-1 bg-green-900/30 border border-green-500 rounded-full text-xs text-green-300">
+                    ✓ {concept.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Educational Feedback */}
+          {feedback && (
+            <div className={`p-4 rounded-xl border ${
+              feedback.includes('✅') ? 'bg-green-900/30 border-green-500' :
+              feedback.includes('❌') ? 'bg-red-900/30 border-red-500' :
+              'bg-purple-900/30 border-purple-500'
+            }`}>
+              <p className={`text-sm ${
+                feedback.includes('✅') ? 'text-green-300' :
+                feedback.includes('❌') ? 'text-red-300' :
+                'text-purple-300'
+              }`}>
+                {feedback}
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Room Header */}
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🔮</div>
@@ -378,8 +624,8 @@ const StateChambrer: React.FC = () => {
             STATE CHAMBER
           </h1>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            Navigate the complex world of quantum states using the holographic Bloch sphere. 
-            Reconstruct the hidden qubit state through strategic measurements before decoherence destroys it.
+            Master quantum state analysis using the holographic Bloch sphere. Apply measurement theory and 
+            decoherence filtering to reconstruct and purify hidden quantum states.
           </p>
         </div>
 
@@ -615,15 +861,72 @@ const StateChambrer: React.FC = () => {
               )}
 
               {roomCompleted && (
-                <div className="mt-6 p-4 bg-green-900/30 border border-green-500 rounded-xl">
-                  <p className="text-green-300 font-semibold">🎉 State Chamber Conquered!</p>
-                  <p className="text-green-200 text-sm mt-2">
-                    Excellent work! You've successfully reconstructed the quantum state and learned to 
-                    distinguish between pure and mixed states through decoherence analysis. The Bloch 
-                    sphere is now yours to command!
-                  </p>
+                <div className="mt-6 p-6 bg-green-900/30 border border-green-500 rounded-xl">
+                  <div className="text-center mb-4">
+                    <div className="text-4xl mb-2">🎉</div>
+                    <p className="text-green-300 font-semibold text-xl">Quantum State Mastery Achieved!</p>
+                  </div>
+                  <div className="space-y-3 text-green-200 text-sm">
+                    <p>
+                      <strong>Conceptual Achievement:</strong> You've successfully demonstrated understanding of quantum state 
+                      representation, measurement theory, state reconstruction, and decoherence filtering - essential skills for quantum computing.
+                    </p>
+                    <p>
+                      <strong>What You Learned:</strong> The Bloch sphere provides a geometric representation of quantum states. 
+                      Measurements reveal state components but introduce noise, which can be filtered to recover pure quantum information.
+                    </p>
+                    <div className="bg-green-800/30 p-3 rounded-lg mt-4">
+                      <p className="font-semibold text-green-300 mb-2">Key Concepts Mastered:</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>• Quantum State Representation</div>
+                        <div>• Bloch Sphere Geometry</div>
+                        <div>• Measurement-Based Reconstruction</div>
+                        <div>• Decoherence Mitigation</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
+
+              {/* Educational Content Modal */}
+              <AnimatePresence>
+                {showEducationalContent && (
+                  <motion.div
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowEducationalContent(false)}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="bg-gray-900/95 rounded-2xl border border-purple-500 max-w-2xl w-full p-6"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="text-center mb-4">
+                        <div className="text-3xl mb-2">📚</div>
+                        <h3 className="text-lg font-bold text-purple-400">Educational Insight</h3>
+                      </div>
+                      
+                      <div className="bg-purple-900/30 border border-purple-500 rounded-lg p-4 mb-4">
+                        <p className="text-purple-200 text-sm leading-relaxed">
+                          {feedback}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setShowEducationalContent(false)}
+                        className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-colors duration-200"
+                      >
+                        Continue Learning
+                      </button>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

@@ -19,3 +19,50 @@ export interface Achievement {
   description: string;
   unlocked: boolean;
 }
+
+export interface SafeZone {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export type CatAnimation = 
+  | 'idle'
+  | 'walking'
+  | 'sitting'
+  | 'celebrating'
+  | 'sleeping'
+  | 'looking'
+  | 'sniffing';
+
+export type CatBehaviorState =
+  | 'entry'
+  | 'idle'
+  | 'success'
+  | 'stuck'
+  | 'hint';
+
+export interface CatDialog {
+  room: Room;
+  state: CatBehaviorState;
+  messages: string[];
+  hints?: string[];
+  educationalFacts?: string[];
+  stories?: string[];
+}
+
+export interface CatReactionTriggers {
+  onMeasureClick?: () => void;
+  onFailure?: (attempt: number) => void;
+  onSuccess?: () => void;
+  onRoomAction?: (action: string) => void;
+}
+
+export interface CompanionCatProps {
+  currentRoom: Room;
+  isRoomCompleted: boolean;
+  onHintRequest: () => void;
+  reactionTriggers?: CatReactionTriggers;
+}

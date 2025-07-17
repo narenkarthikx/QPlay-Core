@@ -1,0 +1,350 @@
+{
+  "probability-bay": {
+    "entry": {
+      "messages": [
+        "Meow! These dice remind me of my famous box experiment. Shall we discover probability together?",
+        "*stretches paws* Ah, the sweet uncertainty of quantum measurements! Ready to explore?",
+        "Purr... *sniffs quantum dice* Welcome to Probability Bay! I'm Schrödinger, your quantum companion!"
+      ],
+      "educationalFacts": [
+        "Did you know? Quantum dice can show true randomness, unlike classical dice!",
+        "In quantum mechanics, probability isn't just about not knowing - it's fundamental to reality!",
+        "Schrödinger's cat (like me!) demonstrates quantum superposition - being in multiple states simultaneously."
+      ]
+    },
+    "idle": {
+      "messages": [
+        "*tail swishes thoughtfully* Each roll reveals a piece of quantum truth.",
+        "*sits and observes the dice* Take your time to understand the measurements...",
+        "*purrs softly* Watch how the histogram builds - it's like watching reality unfold!"
+      ],
+      "stories": [
+        "Once, I was in a box with a Geiger counter. Every measurement collapsed my superposition!",
+        "My cousin, Heisenberg's cat, was always uncertain about their position and momentum...",
+        "Quantum mechanics taught me that curiosity doesn't kill the cat - uncertainty keeps us alive!"
+      ]
+    },
+    "onMeasure": {
+      "messages": [
+        "That's a lot of quantum uncertainty. Let's check the distribution.",
+        "*ears perk up* Excellent! Now we'll see quantum randomness in action!",
+        "*whiskers twitch excitedly* Watch the histogram grow - each roll is unique yet part of a pattern!"
+      ]
+    },
+    "onFail": {
+      "messages": [
+        "Hmm... try the highest frequency bar.",
+        "*gentle meow* Don't worry. Quantum learning takes time. Focus on the highest frequency.",
+        "*nuzzles encouragingly* Look for the tallest bar - it shows the dominant outcome!"
+      ]
+    },
+    "onSuccess": {
+      "messages": [
+        "Yes! You've stabilized the outcome!",
+        "*celebrates with quantum purrs* The uncertainty principle bows to your understanding!",
+        "*happy dance* Magnificent! You've mastered quantum probability!"
+      ]
+    },
+    "stuck": {
+      "messages": [
+        "Need help cracking this? Try observing the frequency peaks.",
+        "*meows encouragingly* Don't worry! Even Einstein struggled with quantum randomness.",
+        "*purrs* Remember: the most frequent outcome holds the key to your escape!"
+      ],
+      "hints": [
+        "The histogram shows which dice value appears most often - that's your quantum signature!",
+        "Look for the tallest bar in your probability distribution.",
+        "The dominant outcome in your measurements is the code you need!"
+      ]
+    },
+    "success": {
+      "messages": [
+        "*purrs loudly and does a little dance* Magnificent! You've mastered quantum probability!",
+        "*celebrates with quantum leaps* The uncertainty principle bows to your understanding!",
+        "*happy meowing* Ready for our next quantum adventure? Onward!"
+      ]
+    },
+    "hint": {
+      "messages": [
+        "The highest bar shows the most probable outcome — aim for that in the lockers!",
+        "*whiskers twitch with wisdom* The secret lies in statistical analysis, dear human!"
+      ]
+    }
+  },
+  "state-chamber": {
+    "entry": {
+      "messages": [
+        "*cautiously enters the chamber* Welcome to the State Chamber! Here, quantum states dance!",
+        "Meow! *sniffs electron configurations* I can sense the energy levels shifting...",
+        "*sits regally* In this realm, particles choose their quantum states. Fascinating!"
+      ],
+      "educationalFacts": [
+        "Electrons don't orbit like planets - they exist in probability clouds called orbitals!",
+        "Each quantum state has specific energy levels, like steps on a cosmic ladder.",
+        "Quantum tunneling lets particles 'teleport' through energy barriers!"
+      ]
+    },
+    "idle": {
+      "messages": [
+        "*observes particle animations* See how elegantly they transition between states?",
+        "*purrs thoughtfully* Each configuration tells a story of quantum possibilities.",
+        "*tail curls in concentration* The beauty of atomic structure never ceases to amaze me."
+      ],
+      "stories": [
+        "I once met an electron who was uncertain about which orbital to call home!",
+        "My quantum dreams involve floating through energy levels like a spectral phantom.",
+        "Did you know cats naturally understand superposition? We're experts at being everywhere at once!"
+      ]
+    },
+    "onMeasure": {
+      "messages": [
+        "*ears perk up* Interesting choice! Let's see how the quantum states respond.",
+        "*whiskers twitch* The electrons are rearranging their energy patterns!",
+        "*watches intently* Observe how the orbitals reshape with your decision!"
+      ]
+    },
+    "onFail": {
+      "messages": [
+        "*gentle head bump* State transitions can be tricky! Think about energy relationships.",
+        "*meows supportively* Remember: electrons prefer the lowest available energy state.",
+        "*nuzzles* Don't worry - even quantum particles sometimes choose the wrong orbital!"
+      ]
+    },
+    "onSuccess": {
+      "messages": [
+        "*quantum sparkles around me* Brilliant! You've unlocked the secrets of quantum states!",
+        "*celebratory purring* The electrons applaud your mastery of their domain!",
+        "*graceful bow* The energy levels sing in perfect harmony!"
+      ]
+    },
+    "stuck": {
+      "messages": [
+        "*gentle head bump* State transitions can be tricky! Think about energy relationships.",
+        "*meows supportively* Remember: electrons prefer the lowest available energy state.",
+        "*stretches* Sometimes the path between states isn't what you'd expect!"
+      ],
+      "hints": [
+        "Start with the ground state and work your way up through energy levels.",
+        "Look for patterns in how electrons fill orbitals - there's a specific order!",
+        "The quantum numbers determine which states are possible."
+      ]
+    },
+    "success": {
+      "messages": [
+        "*quantum sparkles around me* Brilliant! You've unlocked the secrets of quantum states!",
+        "*celebratory purring* The electrons applaud your mastery of their domain!",
+        "*graceful bow* Ready to explore the next dimension of quantum reality?"
+      ]
+    },
+    "hint": {
+      "messages": [
+        "*wise meow* Think like an electron - where would you want to live in this atom?",
+        "*paw gestures to energy diagram* Follow the rules of quantum occupancy!"
+      ]
+    }
+  },
+  "superposition-tower": {
+    "entry": {
+      "messages": [
+        "*looks up at the towering quantum states* Welcome to Superposition Tower! Here, I exist everywhere at once!",
+        "Purr-fect! *phases in and out* This place resonates with my quantum nature!",
+        "*meows in harmony with quantum frequencies* Multiple realities converge here!"
+      ],
+      "educationalFacts": [
+        "Superposition means a quantum system exists in all possible states simultaneously!",
+        "Only when we measure do quantum possibilities collapse into definite outcomes.",
+        "Quantum computers use superposition to process multiple calculations at once!"
+      ]
+    },
+    "idle": {
+      "messages": [
+        "*exists in multiple positions simultaneously* Isn't superposition wonderful?",
+        "*phases through solid matter* Classical physics can't explain this magic!",
+        "*purrs in quantum harmony* Feel the multiple realities flowing around us..."
+      ],
+      "stories": [
+        "In my famous box, I was simultaneously alive and dead until someone looked!",
+        "I have nine lives because I exist in nine different quantum states!",
+        "Sometimes I chase my tail in one dimension while sleeping in another."
+      ]
+    },
+    "stuck": {
+      "messages": [
+        "*appears in helpful pose* Superposition puzzles require quantum thinking!",
+        "*meows encouragingly* Don't force classical logic - embrace quantum possibilities!",
+        "*tail points upward* Think about how states can coexist before measurement!"
+      ],
+      "hints": [
+        "Remember: in superposition, multiple states exist until you make a choice!",
+        "The tower's levels represent different quantum amplitudes.",
+        "Constructive interference happens when quantum waves align!"
+      ]
+    },
+    "success": {
+      "messages": [
+        "*exists in celebration mode across all realities* Quantum congratulations!",
+        "*purrs in superposition* You've mastered the art of multiple realities!",
+        "*quantum teleports with joy* The tower acknowledges your understanding!"
+      ]
+    },
+    "hint": {
+      "messages": [
+        "*exists partially in your dimension* Think about how possibilities combine!",
+        "*quantum whiskers twitch* Superposition is about potential, not just position!"
+      ]
+    }
+  },
+  "entanglement-bridge": {
+    "entry": {
+      "messages": [
+        "*approaches the quantum bridge* Welcome to Entanglement Bridge! Here, distance means nothing!",
+        "Meow! *feels quantum correlations* I can sense the spooky action at a distance!",
+        "*sits at bridge entrance* Two particles, forever connected across the cosmos!"
+      ],
+      "educationalFacts": [
+        "Entangled particles share quantum states instantly, regardless of distance!",
+        "Einstein called it 'spooky action at a distance' because it seemed impossible.",
+        "Quantum entanglement is the foundation of quantum teleportation and cryptography!"
+      ]
+    },
+    "idle": {
+      "messages": [
+        "*observes quantum connections* See how these particles mirror each other?",
+        "*purrs in amazement* The universe's hidden connections are beautiful!",
+        "*tail moves in sync with quantum oscillations* Everything is connected!"
+      ],
+      "stories": [
+        "I once had an entangled companion cat - we always landed on our feet together!",
+        "When I'm entangled, I purr in perfect harmony with cats across the galaxy!",
+        "Quantum entanglement proves that love transcends space and time."
+      ]
+    },
+    "stuck": {
+      "messages": [
+        "*meows sympathetically* Entanglement can be mind-bending! Think about correlation.",
+        "*nods wisely* Remember: measuring one particle instantly affects its partner!",
+        "*stretches across bridge* Sometimes the answer lies in understanding the connection!"
+      ],
+      "hints": [
+        "When particles are entangled, their properties are perfectly correlated.",
+        "Measuring one particle determines the state of its entangled partner instantly.",
+        "Look for the hidden patterns that connect the quantum pairs!"
+      ]
+    },
+    "success": {
+      "messages": [
+        "*quantum purr echoes across dimensions* Magnificent! You've bridged quantum realities!",
+        "*celebrates with entangled dance* The particles sing in perfect harmony!",
+        "*bows gracefully* Ready to tunnel through to our next adventure?"
+      ]
+    },
+    "hint": {
+      "messages": [
+        "*whiskers vibrate with quantum resonance* Think about instant connections!",
+        "*points with both paws simultaneously* What happens to one affects the other!"
+      ]
+    }
+  },
+  "tunneling-vault": {
+    "entry": {
+      "messages": [
+        "*phases through solid walls* Welcome to the Tunneling Vault! Here, walls are just suggestions!",
+        "Purr-fect! *appears inside locked chambers* Quantum tunneling is my specialty!",
+        "*meows from impossible places* Classical barriers cannot contain quantum curiosity!"
+      ],
+      "educationalFacts": [
+        "Quantum tunneling lets particles pass through barriers they shouldn't classically cross!",
+        "This effect powers many technologies, from computer processors to nuclear fusion!",
+        "Even large objects have a tiny probability of tunneling - though it's astronomically small!"
+      ]
+    },
+    "idle": {
+      "messages": [
+        "*phases in and out of solid objects* Watch me demonstrate quantum tunneling!",
+        "*purrs from within walls* Barriers are just probability distributions!",
+        "*tail appears through impossible surfaces* Classical physics weeps at my abilities!"
+      ],
+      "stories": [
+        "I learned tunneling from watching electrons sneak through forbidden zones!",
+        "Once, I tunneled so far I ended up in parallel universe - the fish there were delicious!",
+        "My greatest tunneling achievement? Escaping from that infamous box experiment!"
+      ]
+    },
+    "stuck": {
+      "messages": [
+        "*emerges from barrier* Don't let classical thinking trap you!",
+        "*meows through impossible spaces* Sometimes the direct path isn't the quantum path!",
+        "*phases partially* Think about probability waves, not just particle positions!"
+      ],
+      "hints": [
+        "Quantum tunneling depends on the barrier's width and height.",
+        "Even impossible barriers have a small probability of being crossed!",
+        "Wave functions can extend beyond classical boundaries."
+      ]
+    },
+    "success": {
+      "messages": [
+        "*tunnels through celebration barriers* Quantum breakthrough achieved!",
+        "*purrs from all dimensions simultaneously* You've mastered the impossible!",
+        "*phases with excitement* Ready to archive our quantum knowledge?"
+      ]
+    },
+    "hint": {
+      "messages": [
+        "*exists within solid matter* Think beyond classical boundaries!",
+        "*quantum whiskers penetrate walls* Probability doesn't respect barriers!"
+      ]
+    }
+  },
+  "quantum-archive": {
+    "entry": {
+      "messages": [
+        "*reverently enters the archive* Welcome to the Quantum Archive! Here lies all quantum knowledge!",
+        "Meow... *sniffs ancient quantum texts* The wisdom of the universe awaits!",
+        "*sits among floating data streams* This is where quantum mysteries become quantum mastery!"
+      ],
+      "educationalFacts": [
+        "Quantum information can exist in superposition, allowing for massive parallel processing!",
+        "Quantum error correction protects fragile quantum states from decoherence.",
+        "The quantum internet will revolutionize secure communication and computation!"
+      ]
+    },
+    "idle": {
+      "messages": [
+        "*reads floating quantum equations* So much knowledge to absorb!",
+        "*purrs contentedly among data streams* Every formula tells a quantum story.",
+        "*tail traces quantum algorithms in the air* The beauty of mathematical truth!"
+      ],
+      "stories": [
+        "I helped Schrödinger write his famous equation by walking across his papers!",
+        "My pawprints appear in the original manuscripts of quantum mechanics.",
+        "The greatest quantum physicists all had cats - we inspire quantum thinking!"
+      ]
+    },
+    "stuck": {
+      "messages": [
+        "*nudges you toward relevant information* The archive holds all the answers you seek!",
+        "*meows wisely* Sometimes you must combine knowledge from previous chambers!",
+        "*points to glowing data streams* Let the quantum information guide you!"
+      ],
+      "hints": [
+        "This puzzle combines concepts from all the previous chambers.",
+        "Look for connections between probability, states, superposition, entanglement, and tunneling.",
+        "The archive responds to demonstrated quantum understanding!"
+      ]
+    },
+    "success": {
+      "messages": [
+        "*quantum aurora surrounds me* Congratulations! You've achieved quantum enlightenment!",
+        "*purrs with cosmic resonance* The universe celebrates your mastery!",
+        "*bows deeply* You are now a true quantum explorer! Our journey is complete!"
+      ]
+    },
+    "hint": {
+      "messages": [
+        "*ancient quantum wisdom flows through my whiskers* Combine all you've learned!",
+        "*meows in the language of the cosmos* The answer synthesizes every quantum principle!"
+      ]
+    }
+  }
+}

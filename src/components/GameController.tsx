@@ -8,7 +8,8 @@ import EntanglementBridge from './rooms/EntanglementBridge';
 import TunnelingVault from './rooms/TunnelingVault';
 import QuantumArchive from './rooms/QuantumArchive';
 import RoomSelector from './RoomSelector';
-import { Room } from '../types/game';
+import CompanionCat from './CompanionCat';
+import { Room, CatReactionTriggers } from '../types/game';
 import PortalTransition from './ui/PortalTransition';
 
 interface GameControllerProps {
@@ -42,6 +43,30 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   const currentRoomIndex = rooms.indexOf(currentRoom);
   const canGoNext = currentRoomIndex < rooms.length - 1 && gameState.completedRooms.includes(currentRoom);
   const canGoPrevious = currentRoomIndex > 0;
+  const isRoomCompleted = gameState.completedRooms.includes(currentRoom);
+
+  // Handle hint requests from the cat
+  const handleHintRequest = () => {
+    // This could trigger room-specific hint mechanisms
+    // For now, we'll just log it - individual rooms can implement their own hint systems
+    console.log(`Hint requested for ${currentRoom}`);
+  };
+
+  // Cat reaction triggers for smart behavior
+  const catReactionTriggers = {
+    onMeasureClick: () => {
+      console.log('Cat reacting to measurement action');
+    },
+    onFailure: (attempt: number) => {
+      console.log(`Cat reacting to failure attempt ${attempt}`);
+    },
+    onSuccess: () => {
+      console.log('Cat celebrating success');
+    },
+    onRoomAction: (action: string) => {
+      console.log(`Cat reacting to room action: ${action}`);
+    }
+  };
 
   const goToNextRoom = () => {
     if (canGoNext) {
@@ -68,19 +93,19 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
   const renderCurrentRoom = () => {
     switch (currentRoom) {
       case 'probability-bay':
-        return <ProbabilityBay />;
+        return <ProbabilityBay catReactionTriggers={catReactionTriggers} />;
       case 'state-chamber':
-        return <StateChambrer />;
+        return <StateChambrer catReactionTriggers={catReactionTriggers} />;
       case 'superposition-tower':
-        return <SuperpositionTower />;
+        return <SuperpositionTower catReactionTriggers={catReactionTriggers} />;
       case 'entanglement-bridge':
-        return <EntanglementBridge />;
+        return <EntanglementBridge catReactionTriggers={catReactionTriggers} />;
       case 'tunneling-vault':
-        return <TunnelingVault />;
+        return <TunnelingVault catReactionTriggers={catReactionTriggers} />;
       case 'quantum-archive':
-        return <QuantumArchive />;
+        return <QuantumArchive catReactionTriggers={catReactionTriggers} />;
       default:
-        return <ProbabilityBay />;
+        return <ProbabilityBay catReactionTriggers={catReactionTriggers} />;
     }
   };
 
@@ -168,6 +193,14 @@ const GameController: React.FC<GameControllerProps> = ({ onBackToMenu }) => {
           </button>
         </div>
       )}
+
+      {/* Companion Cat */}
+      <CompanionCat
+        currentRoom={currentRoom}
+        isRoomCompleted={isRoomCompleted}
+        onHintRequest={handleHintRequest}
+        reactionTriggers={catReactionTriggers}
+      />
     </div>
   );
 };
