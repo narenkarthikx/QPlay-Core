@@ -1,12 +1,45 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { GoogleLogin } from '@react-oauth/google'; //Used in your LoginWithGoogle component:
+import {toast} from 'react-hot-toast'; //Used for showing success or error messages:
+import { CredentialResponse } from '@react-oauth/google'; //Used to type the credential response from Google:
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: "signin" | "signup";
+  initialMode?: 'signin' | 'signup';
 }
+
+//  Google Login Button Component integrated with AuthContext
+// Handles sign-in via Google OAuth and stores session centrally
+const LoginWithGoogle: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const { signInWithGoogle } = useAuth(); //  Use auth context method for centralized login logic
+
+  //  Handles Google login success
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    const credential = credentialResponse.credential;
+    
+    //  Check if credential is present
+    if (!credential) {
+      toast.error("Missing Google credential");
+      return;
+    }
+
+    try {
+      //  Pass credential to context for backend login + token handling
+      await signInWithGoogle(credential); //Authcontext hhandles storage.
+
+      //  Success feedback
+      toast.success("Welcome to Quantum Quest!");
+
+      //  Close modal on success
+      onClose();
+    } catch (err: any) {
+      console.error("Google Sign-In Error:", err);
+      toast.error("Google Login Failed");
+    }
+  };
 
 const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
@@ -256,6 +289,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </p>
           </div>
         </form>
+
+  {/* Or sign in with Google */}
+<div className="mt-6">
+  <LoginWithGoogle onClose={onClose}/>
+</div>
+
 
         {/* Features Preview (signup mode) */}
         {mode === "signup" && (
