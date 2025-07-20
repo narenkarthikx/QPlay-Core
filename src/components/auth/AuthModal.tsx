@@ -298,11 +298,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
           </div>
         </form>
 
-  {/* Or sign in with Google */}
-<div className="mt-6 flex justify-center">
-  <div className="w-full max-w-xs">
-    <LoginWithGoogle onClose={onClose} />
-  </div>
+    {/* Or sign in with Google */}
+<div className="mt-6 flex justify-center [&>div]:mx-auto">
+  <LoginWithGoogle onClose={onClose} />
 </div>
 
         {/* Features Preview (signup mode) */}
