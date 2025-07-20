@@ -40,6 +40,14 @@ const LoginWithGoogle: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       toast.error("Google Login Failed");
     }
   };
+    return (
+    //  Google login UI button
+    <GoogleLogin
+      onSuccess={handleGoogleSuccess}
+      onError={() => toast.error("Google Login Failed")}
+    />
+  );
+};
 
 const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
