@@ -17,6 +17,7 @@ interface User {
   total_score: number;
   quantum_mastery_level: number;
   preferences: Record<string, any>;
+  auth_provider: 'google' | 'email';
 }
 
 interface SignUpData {
@@ -31,6 +32,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (data: SignUpData) => Promise<void>;
+  signInWithGoogle: (credential: string) => Promise<void>;
   signOut: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -105,6 +107,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+   // Function to handle sign-in via Google OAuth credential
+ // Handles sending credential to /api/auth/google.
+const signInWithGoogle = async (credential: string) => {
+  setLoading(true); // Set loading state to show spinner or disable UI during the request
+
+  try {
+    // Send the credential (JWT from Google) to your Flask backend for verification
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential }) // Send the token in request body
+    });
+
+    // Parse the JSON response from backend
+    const data = await res.json();
+
+    // If backend confirms success
+    if (data.success) {
+      // Save user data in your local AuthContext/state
+      setUser(data.user);
+
+      // If an access token is returned (optional, but useful for future auth)
+      if (data.access_token) {
+        // Store token in localStorage for persistence across reloads
+        localStorage.setItem("quantum-quest-token", data.access_token);
+
+        // Set the token in your API service so all future API calls include it
+        apiService.setAuthToken(data.access_token);
+      }
+    } else {
+      // If success is false, throw an error using the backend-provided message
+      throw new Error(data.error || "Google sign-in failed");
+    }
+  } catch (err: any) {
+    // Handle any network or parsing errors
+    throw new Error(err.message || "Google auth error");
+  } finally {
+    // Always reset loading state
+    setLoading(false);
+  }
+};
+
+
   const signOut = () => {
     localStorage.removeItem('quantum-quest-token');
     apiService.setAuthToken(null);
@@ -150,7 +195,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signUp,
       signOut,
       updateProfile,
-      refreshUser
+      refreshUser,
+      signInWithGoogle
     }}>
       {children}
     </AuthContext.Provider>
