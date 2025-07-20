@@ -5,6 +5,7 @@ import GameController from "./components/GameController";
 import { GameProvider } from "./contexts/GameContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ThemeProvider } from "./components/ui/ThemeProvider";
 import { Room } from "./types/game";
 
@@ -15,6 +16,7 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
 
   return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <AuthProvider>
       <SettingsProvider>
         <GameProvider>
@@ -75,6 +77,7 @@ function App() {
         </GameProvider>
       </SettingsProvider>
     </AuthProvider>
+   </GoogleOAuthProvider>
   );
 }
 
