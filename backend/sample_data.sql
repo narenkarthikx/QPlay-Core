@@ -91,3 +91,14 @@ SELECT u.username, qm.room_id, qm.measurement_type, qm.timestamp
 FROM quantum_measurements qm 
 JOIN users u ON qm.user_id = u.id 
 ORDER BY qm.timestamp DESC;
+
+
+-- For additon of auth provider
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS auth_provider text DEFAULT 'email';
+UPDATE public.users
+SET auth_provider = 'email'
+WHERE auth_provider IS NULL;
+
+
+
