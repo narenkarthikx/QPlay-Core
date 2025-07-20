@@ -32,3 +32,11 @@ pnpm-lock.yaml
 vite.config.ts
 
 
+# Un-ignore important config files
+!tsconfig.json
+!vite-env.d.ts
+!package-lock.json
+!vite.config.ts
+
+
+
