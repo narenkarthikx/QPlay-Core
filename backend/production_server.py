@@ -9,6 +9,10 @@ import requests
 import json
 import os
 from datetime import datetime, timezone
+from google.oauth2 import id_token # module to verify Google ID tokens (used in OAuth2 authentication)
+from google.auth.transport import requests as grequests # Google Auth library to make secure HTTP requests during token verification
+import random
+import string
 
 # Load environment variables from .env file
 try:
@@ -21,6 +25,10 @@ except ImportError:
 # Create Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+
+#Google Client id
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
 # Supabase configuration - read from environment variables
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
@@ -48,6 +56,17 @@ def get_supabase_headers(use_service_key=False):
         "Content-Type": "application/json",
         "Prefer": "return=representation"
     }
+
+# Utility function to generate a unique-looking username from an email address
+def generate_username(email):
+    # Take the part before '@' in the email as the base (e.g., "john.doe" from "john.doe@gmail.com")
+    base = email.split('@')[0]
+
+    # Generate a random 4-digit numeric string (e.g., "4827")
+    suffix = ''.join(random.choices(string.digits, k=4))
+
+    # Combine base and suffix to create a username (e.g., "john.doe_4827")
+    return f"{base}_{suffix}"
 
 @app.route('/')
 def root():
@@ -251,6 +270,145 @@ def login():
 def signin():
     """Alias for login endpoint"""
     return login()
+
+
+#Google sign in /Sign up
+
+@app.route('/api/auth/google', methods=['POST', 'OPTIONS'])
+def google_auth():
+    """Handles Google OAuth sign-in/signup"""
+
+    # Handle CORS preflight request (browser sends OPTIONS before POST)
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    try:
+        # Parse the incoming JSON payload
+        data = request.get_json()
+        credential = data.get("credential")
+
+        if not credential:
+            return jsonify({"success": False, "error": "Missing credential"}), 400
+
+        # ---------------- Step 1: Verify Google token ----------------
+        # Validates the ID token using Google's public keys
+        id_info = id_token.verify_oauth2_token(
+            credential, grequests.Request(), GOOGLE_CLIENT_ID
+        )
+
+        # Extract basic user info from the token payload
+        email = id_info["email"]
+        full_name = id_info.get("name", "")
+        avatar_url = id_info.get("picture", "")
+        provider = "google"
+
+        # ---------------- Step 2: Check if user already exists in Supabase ----------------
+        response = requests.get(
+            f"{SUPABASE_REST_URL}/users?email=eq.{email}",
+            headers=get_supabase_headers()
+        )
+
+        # If user exists, return the user object
+        if response.status_code == 200 and response.json():
+            user = response.json()[0]
+            return jsonify({
+                "success": True,
+                "message": "Google login successful",
+                "user": user
+            })
+
+        # ---------------- Step 3: Generate a unique username ----------------
+        # Auto-generate username (e.g., based on email) and ensure uniqueness
+        username = generate_username(email)
+        username_check = requests.get(
+            f"{SUPABASE_REST_URL}/users?username=eq.{username}",
+            headers=get_supabase_headers()
+        )
+
+        # Loop until a unique username is found
+        while username_check.status_code == 200 and username_check.json():
+            username = generate_username(email)
+            username_check = requests.get(
+                f"{SUPABASE_REST_URL}/users?username=eq.{username}",
+                headers=get_supabase_headers()
+            )
+
+        # ---------------- Step 4: Create user in Supabase ----------------
+        # Construct user data with default and derived fields
+        user_data = {
+            "email": email,
+            "username": username,
+            "full_name": full_name,
+            "avatar_url": avatar_url,
+            "auth_provider": provider,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "is_verified": True,
+            "is_premium": False,
+            "total_playtime": 0,
+            "games_completed": 0,
+            "best_completion_time": None,
+            "total_score": 0,
+            "quantum_mastery_level": 1,
+            "is_active": True
+        }
+
+        # Send POST request to insert user into Supabase `users` table
+        response = requests.post(
+            f"{SUPABASE_REST_URL}/users",
+            headers=get_supabase_headers(use_service_key=True),
+            json=user_data
+        )
+
+        # Handle error if user creation fails
+        if response.status_code not in [200, 201]:
+            return jsonify({
+                "success": False,
+                "error": f"Failed to create user. Status: {response.status_code}"
+            }), 500
+
+        # Get the newly created user object
+        created_user = response.json()[0]
+
+        # ---------------- Step 5: Create leaderboard entry for new user ----------------
+        leaderboard_entries = [{
+            "user_id": created_user.get("id"),
+            "category": "total_score",
+            "completion_time": None,
+            "total_score": 0,
+            "difficulty": "easy",
+            "rooms_completed": 0,
+            "hints_used": 0,
+            "achieved_at": datetime.now(timezone.utc).isoformat()
+        }]
+
+        try:
+            # Insert default leaderboard entry
+            requests.post(
+                f"{SUPABASE_REST_URL}/leaderboard_entries",
+                headers=get_supabase_headers(use_service_key=True),
+                json=leaderboard_entries
+            )
+        except Exception as e:
+            # Warn if leaderboard entry creation fails (non-critical)
+            print(f"[WARN] Leaderboard entry creation failed: {e}")
+
+        # Return success response with created user object
+        return jsonify({
+            "success": True,
+            "message": "Google account created",
+            "user": created_user
+        }), 201
+
+    # ---------------- Error Handling ----------------
+
+    except ValueError as e:
+        # Invalid token or verification failed
+        return jsonify({"success": False, "error": f"Invalid Google token: {str(e)}"}), 400
+
+    except Exception as e:
+        # Catch-all for unexpected server errors
+        return jsonify({"success": False, "error": f"Unexpected error: {str(e)}"}), 500
+
 
 # Game session endpoints
 
