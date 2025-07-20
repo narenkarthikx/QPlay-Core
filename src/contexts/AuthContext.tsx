@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiService } from '../services/api';
+import { googleAuthService, GoogleAuthResponse } from '../services/googleAuth';
 
 interface User {
   id: string;
@@ -31,6 +32,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (data: SignUpData) => Promise<void>;
+  signInWithGoogle: (credentialResponse: any) => Promise<void>;
   signOut: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -105,6 +107,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const signInWithGoogle = async (credentialResponse: any) => {
+    setLoading(true);
+    try {
+      const authResponse = googleAuthService.processAuthResponse(credentialResponse);
+      if (!authResponse) {
+        throw new Error('Failed to process Google authentication response');
+      }
+
+      const response = await apiService.googleSignIn(
+        authResponse.credential,
+        authResponse.user_info
+      );
+      
+      // Store token
+      localStorage.setItem('quantum-quest-token', response.access_token);
+      apiService.setAuthToken(response.access_token);
+      
+      // Set user
+      setUser(response.user);
+    } catch (error: any) {
+      throw new Error(error.message || 'Google sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = () => {
     localStorage.removeItem('quantum-quest-token');
     apiService.setAuthToken(null);
@@ -148,6 +176,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       loading,
       signIn,
       signUp,
+      signInWithGoogle,
       signOut,
       updateProfile,
       refreshUser

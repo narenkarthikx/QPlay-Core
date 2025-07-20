@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -239,6 +240,23 @@ const AuthModal: React.FC<AuthModalProps> = ({
               <span>{mode === "signin" ? "Sign In" : "Create Account"}</span>
             )}
           </button>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-900/95 text-gray-400">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <GoogleSignInButton
+            onSuccess={() => onClose()}
+            onError={(error) => setErrors({ general: error })}
+            disabled={loading}
+          />
 
           {/* Mode Switch */}
           <div className="text-center pt-4 border-t border-gray-700">

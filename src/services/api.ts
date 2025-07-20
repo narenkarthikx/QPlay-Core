@@ -94,6 +94,23 @@ class ApiService {
     return response;
   }
 
+  async googleSignIn(credential: string, userInfo: any): Promise<SignInResponse> {
+    const response = await this.request('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        credential,
+        user_info: userInfo
+      })
+    });
+    
+    // Store token automatically
+    if (response.access_token) {
+      this.setAuthToken(response.access_token);
+    }
+    
+    return response;
+  }
+
   async getCurrentUser() {
     return this.request('/api/auth/me');
   }

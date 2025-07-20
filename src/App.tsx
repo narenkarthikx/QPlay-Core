@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Play, Home, Settings, Trophy, Zap } from "lucide-react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import MainMenu from "./components/MainMenu";
 import GameController from "./components/GameController";
 import { GameProvider } from "./contexts/GameContext";
@@ -7,6 +8,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./components/ui/ThemeProvider";
 import { Room } from "./types/game";
+import { googleAuthService } from "./services/googleAuth";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<
@@ -15,10 +17,11 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
 
   return (
-    <AuthProvider>
-      <SettingsProvider>
-        <GameProvider>
-          <ThemeProvider>
+    <GoogleOAuthProvider clientId={googleAuthService.getClientId()}>
+      <AuthProvider>
+        <SettingsProvider>
+          <GameProvider>
+            <ThemeProvider>
             <div
               className="min-h-screen font-rajdhani transition-colors duration-300 main-bg bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white"
               style={{
@@ -75,6 +78,7 @@ function App() {
         </GameProvider>
       </SettingsProvider>
     </AuthProvider>
+  </GoogleOAuthProvider>
   );
 }
 
