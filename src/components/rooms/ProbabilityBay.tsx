@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useGame } from "../../contexts/GameContext";
 import { motion, AnimatePresence } from "framer-motion";
+import FeedbackButton from "../FeedbackButton";
 
 const ProbabilityBay: React.FC = () => {
   const { completeRoom, logQuantumMeasurement } = useGame();
@@ -381,10 +382,14 @@ const ProbabilityBay: React.FC = () => {
                 <p className="text-green-300 font-semibold">
                   🎉 Probability Bay Solved!
                 </p>
-                <p className="text-green-200 text-sm mt-2">
+                <p className="text-green-200 text-sm mt-2 mb-4">
                   You've stabilized the probability field by uncovering the
                   hidden quantum structure!
                 </p>
+                <FeedbackButton 
+                  roomId="probability-bay" 
+                  className="w-full sm:w-auto"
+                />
               </div>
             )}
           </div>
