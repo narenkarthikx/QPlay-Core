@@ -12,6 +12,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useGame } from "../../contexts/GameContext";
+import FeedbackButton from "../FeedbackButton";
 
 interface QuantumPad {
   id: number;
@@ -1094,9 +1095,13 @@ const SuperpositionTower: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 text-green-400 text-sm">
+                  <div className="mt-4 text-green-400 text-sm mb-4">
                     🏆 Achievement Unlocked: Superposition Walker
                   </div>
+                  <FeedbackButton 
+                    roomId="superposition-tower" 
+                    className="w-full sm:w-auto"
+                  />
                 </div>
               )}
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, Wifi, AlertTriangle, CheckCircle, BarChart3, Target, Clock, ArrowRight, BookOpen, Calculator, Settings, FlaskConical, TestTube, Trophy } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import FeedbackButton from '../FeedbackButton';
 
 interface Measurement {
   aliceAngle: number;
@@ -861,9 +862,13 @@ const EntanglementBridge: React.FC = () => {
                 <div className="text-green-200">{((bellTestResults?.bellParameter || 0) - 2).toFixed(3)}</div>
               </div>
             </div>
-            <div className="mt-4 text-green-400 text-sm">
+            <div className="mt-4 text-green-400 text-sm mb-4">
               🏆 Achievement Unlocked: Entanglement Prover
             </div>
+            <FeedbackButton 
+              roomId="entanglement-bridge" 
+              className="w-full sm:w-auto"
+            />
           </div>
         )}
       </div>

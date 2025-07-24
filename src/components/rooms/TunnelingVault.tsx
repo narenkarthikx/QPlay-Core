@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, ArrowRight, AlertTriangle, Mountain, Calculator, BookOpen, Target, BarChart3 } from 'lucide-react';
 import { useGame } from '../../contexts/GameContext';
+import FeedbackButton from '../FeedbackButton';
 
 interface TunnelingAttempt {
   barrierHeight: number;
@@ -793,11 +794,15 @@ const TunnelingVault: React.FC = () => {
                   <div className="mt-3 text-green-400 text-sm">
                     🏆 Achievement Unlocked: Quantum Tunneler
                   </div>
-                  <div className="mt-2 text-green-300 text-xs p-2 bg-green-800/20 rounded border border-green-600">
+                  <div className="mt-2 text-green-300 text-xs p-2 bg-green-800/20 rounded border border-green-600 mb-4">
                     📚 <strong>Educational Journey Complete:</strong> You've learned the fundamentals using simplified models. 
                     Real quantum tunneling research involves advanced mathematics, multi-dimensional analysis, and 
                     cutting-edge experimental techniques!
                   </div>
+                  <FeedbackButton 
+                    roomId="tunneling-vault" 
+                    className="w-full sm:w-auto"
+                  />
                 </div>
               )}
             </div>

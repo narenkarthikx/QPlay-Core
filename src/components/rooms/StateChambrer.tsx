@@ -9,6 +9,7 @@ import { Compass, Zap, Timer, AlertTriangle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { useGame } from "../../contexts/GameContext";
+import FeedbackButton from "../FeedbackButton";
 
 // Add global type declarations for Blochy libraries
 declare global {
@@ -774,12 +775,16 @@ const StateChambrer: React.FC = () => {
                   <p className="text-green-300 font-semibold">
                     🎉 State Chamber Conquered!
                   </p>
-                  <p className="text-green-200 text-sm mt-2">
+                  <p className="text-green-200 text-sm mt-2 mb-4">
                     Excellent work! You've successfully reconstructed the
                     quantum state and learned to distinguish between pure and
                     mixed states through decoherence analysis. The Bloch sphere
                     is now yours to command!
                   </p>
+                  <FeedbackButton 
+                    roomId="state-chamber" 
+                    className="w-full sm:w-auto"
+                  />
                 </div>
               )}
             </div>
