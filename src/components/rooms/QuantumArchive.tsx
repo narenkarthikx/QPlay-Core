@@ -95,21 +95,22 @@ const QuantumArchive: React.FC = () => {
   ];
 
   // Cooldown effect
-  React.useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isOnCooldown && cooldownTime > 0) {
-      interval = setInterval(() => {
-        setCooldownTime(prev => {
-          if (prev <= 1) {
-            setIsOnCooldown(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isOnCooldown, cooldownTime]);
+React.useEffect(() => {
+  let interval: ReturnType<typeof setInterval>;
+  if (isOnCooldown && cooldownTime > 0) {
+    interval = setInterval(() => {
+      setCooldownTime(prev => {
+        if (prev <= 1) {
+          setIsOnCooldown(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+  return () => clearInterval(interval);
+}, [isOnCooldown, cooldownTime]);
+
 
   const toggleConceptSelection = (conceptId: string) => {
     if (isOnCooldown) return;
