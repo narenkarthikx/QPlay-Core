@@ -14,6 +14,15 @@ import { useGame } from "../../contexts/GameContext";
 import { motion, AnimatePresence } from "framer-motion";
 import FeedbackButton from "../FeedbackButton";
 
+
+const DICE_FACE_COUNT = 6;
+const ROLL_COUNT = 50;
+const ROLL_DELAY_MS = 40;
+
+const DICE_ICONS = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
+const LOCKER_NUMBERS = Array.from({ length: DICE_FACE_COUNT }, (_, i) => i + 1);
+
+
 const ProbabilityBay: React.FC = () => {
   const { completeRoom, logQuantumMeasurement } = useGame();
 
@@ -28,24 +37,25 @@ const ProbabilityBay: React.FC = () => {
   const [roomStartTime] = useState(Date.now());
   const [attempts, setAttempts] = useState(0);
 
-  const rollQuantumDice = () => {
-    if (!rollQuantumDice.weights) {
-      const rawWeights = Array.from({ length: 6 }, () => Math.random());
-      const total = rawWeights.reduce((sum, w) => sum + w, 0);
-      rollQuantumDice.weights = rawWeights.map((w) => w / total);
-    }
+const rollQuantumDice = () => {
+  if (!rollQuantumDice.weights) {
+    const rawWeights = Array.from({ length: DICE_FACE_COUNT }, () => Math.random());
+    const total = rawWeights.reduce((sum, w) => sum + w, 0);
+    rollQuantumDice.weights = rawWeights.map((w) => w / total);
+  }
 
-    const weights = rollQuantumDice.weights;
-    const random = Math.random();
-    let sum = 0;
+  const weights = rollQuantumDice.weights;
+  const random = Math.random();
+  let sum = 0;
 
-    for (let i = 0; i < weights.length; i++) {
-      sum += weights[i];
-      if (random < sum) return i + 1;
-    }
-    return 6;
-  };
-  rollQuantumDice.weights = null as number[] | null;
+  for (let i = 0; i < weights.length; i++) {
+    sum += weights[i];
+    if (random < sum) return i + 1;
+  }
+  return DICE_FACE_COUNT;
+};
+rollQuantumDice.weights = null as number[] | null;
+
 
   const performMeasurements = async () => {
     setIsRolling(true);
@@ -53,12 +63,12 @@ const ProbabilityBay: React.FC = () => {
     rollQuantumDice.weights = null;
     const newMeasurements: number[] = [];
 
-    for (let i = 0; i < 50; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 40));
-      const result = rollQuantumDice();
-      newMeasurements.push(result);
-      setMeasurements([...newMeasurements]);
-    }
+  for (let i = 0; i < ROLL_COUNT; i++) {
+   await new Promise((resolve) => setTimeout(resolve, ROLL_DELAY_MS));
+   const result = rollQuantumDice();
+   newMeasurements.push(result);
+   setMeasurements([...newMeasurements]);
+}
 
     setIsRolling(false);
     setShowHistogram(true);
@@ -77,7 +87,7 @@ const ProbabilityBay: React.FC = () => {
 
   const getDiceIcon = (value: number) => {
     const icons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
-    const Icon = icons[value - 1];
+    const Icon = DICE_ICONS[value - 1];
     return <Icon className={`w-8 h-8 ${isRolling ? "centered-bounce" : ""}`} />;
   };
 
@@ -87,39 +97,44 @@ const ProbabilityBay: React.FC = () => {
     return counts;
   };
 
-  const checkLockerCode = async () => {
-    setAttempts((prev) => prev + 1);
 
-    const histogramData = getHistogramData();
-    const maxCount = Math.max(...histogramData);
-    const tiedIndices = histogramData
-      .map((count, index) => (count === maxCount ? index : -1))
-      .filter((index) => index !== -1);
-    const randomIndex =
-      tiedIndices[Math.floor(Math.random() * tiedIndices.length)];
-    const expectedCode = (randomIndex + 1).toString();
+  const getExpectedLockerCode = (histogram: number[]): string => {
+  const max = Math.max(...histogram);
+  const tied = histogram.map((c, i) => (c === max ? i : -1)).filter(i => i !== -1);
+  const index = tied[Math.floor(Math.random() * tied.length)];
+  return (index + 1).toString();
+};
 
-    if (lockerCode === expectedCode) {
-      setDecoySolved(true);
-      if (selectedLocker === parseInt(expectedCode)) {
-        setRoomCompleted(true);
+const calculateScore = (attempts: number, time: number): number => {
+  const BASE = 1000;
+  const ATTEMPT_PENALTY = 100;
+  const TIME_PENALTY = Math.floor(time / 1000);
+  return Math.max(BASE - (attempts - 1) * ATTEMPT_PENALTY - TIME_PENALTY, 100);
+};
 
-        // Calculate completion metrics
-        const completionTime = Date.now() - roomStartTime;
-        const score = Math.max(
-          1000 - (attempts - 1) * 100 - Math.floor(completionTime / 1000),
-          100,
-        );
+const checkLockerCode = async () => {
+  setAttempts((prev) => prev + 1);
 
-        // Complete room with metrics
-        await completeRoom("probability-bay", {
-          time: completionTime,
-          attempts: attempts,
-          score: score,
-        });
-      }
+  const histogramData = getHistogramData();
+  const expectedCode = getExpectedLockerCode(histogramData);
+
+  if (lockerCode === expectedCode) {
+    setDecoySolved(true);
+    if (selectedLocker === parseInt(expectedCode)) {
+      setRoomCompleted(true);
+
+      const completionTime = Date.now() - roomStartTime;
+      const score = calculateScore(attempts, completionTime);
+
+      await completeRoom("probability-bay", {
+        time: completionTime,
+        attempts: attempts,
+        score: score,
+      });
     }
-  };
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900/20 to-cyan-900/20 p-6">
@@ -320,7 +335,7 @@ const ProbabilityBay: React.FC = () => {
             </p>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
-              {[1, 2, 3, 4, 5, 6].map((locker) => (
+              {LOCKER_NUMBERS.map((locker) => (
                 <div
                   key={locker}
                   onClick={() => setSelectedLocker(locker)}
@@ -351,7 +366,7 @@ const ProbabilityBay: React.FC = () => {
                 <option value="" disabled>
                   Select a quantum code...
                 </option>
-                {[1, 2, 3, 4, 5, 6].map((code) => (
+                {LOCKER_NUMBERS.map((code) => (
                   <option key={code} value={code}>
                     {code}
                   </option>
