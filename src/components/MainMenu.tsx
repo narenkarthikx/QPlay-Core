@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Play,
   BookOpen,
@@ -29,12 +29,39 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [showBackstory, setShowBackstory] = useState(false);
 
+  // Tips to display in rotation
+  const tips = [
+    "⚛️ A qubit can exist in both 0 and 1 at once — that's superposition.",
+    "🧩 Measuring a qubit collapses it to a definite state.",
+    "🌐 Entangled particles affect each other instantly — even across space!",
+    "🔒 Decoherence is the enemy of pure quantum states.",
+  ];
+
+  // For rotating tips
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
+  // For showing rank title based on mastery level
+  const getQuantumRank = (level: number) => {
+    if (level >= 10) return "Quantum Grandmaster";
+    if (level >= 7) return "Quantum Pilot";
+    if (level >= 4) return "Qubit Wrangler";
+    return "Quantum Apprentice";
+  };
+
   const { user, signOut } = useAuth();
 
   const handleAuthClick = (mode: "signin" | "signup") => {
     setAuthMode(mode);
     setShowAuth(true);
   };
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentTipIndex((prev) => (prev + 1) % tips.length);
+  }, 6000); // Change every 6 seconds
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <div
@@ -125,6 +152,10 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
             the mysteries of quantum physics through immersive escape rooms that
             challenge your understanding of reality itself.
           </p>
+          <p className="text-sm text-cyan-300 italic mt-4 transition-opacity duration-500">
+  {tips[currentTipIndex]}
+</p>
+
         </div>
 
         {/* Main Menu Buttons */}
@@ -132,6 +163,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
           {/* Backstory Button */}
           <button
             onClick={() => setShowBackstory(true)}
+            title="Learn the story behind Quantum Quest"
             className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-3 text-lg mb-2"
           >
             <BookOpen className="w-6 h-6" />
@@ -140,6 +172,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
           <button
             onClick={onStartGame}
+            title="Begin or resume your quantum journey"
             className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500
                      text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25
@@ -151,6 +184,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
           <button
             onClick={() => setShowLeaderboard(true)}
+            title="See the top quantum minds"
             className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400
                      text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25
@@ -162,6 +196,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
           <button
             onClick={() => setShowGuide(true)}
+            title="Read about quantum concepts and game tips"
             className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600
                      text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 flex items-center justify-center space-x-3 text-lg"
@@ -172,6 +207,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
           <button
             onClick={() => setShowAchievements(true)}
+            title="View your achievements and progress"
             className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600
                      text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 flex items-center justify-center space-x-3 text-lg"
@@ -182,6 +218,7 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
 
           <button
             onClick={() => setShowSettings(true)}
+            title="Adjust game settings and preferences"
             className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600
                      text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300
                      transform hover:scale-105 flex items-center justify-center space-x-3 text-lg"
@@ -216,6 +253,9 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
                 </div>
                 <div className="text-sm text-gray-400">Mastery Level</div>
               </div>
+              <div className="text-xs text-yellow-400 italic mt-1">
+  {getQuantumRank(user.quantum_mastery_level)}
+</div>
               <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-700">
                 <div className="text-2xl font-bold text-yellow-400">
                   {user.best_completion_time
