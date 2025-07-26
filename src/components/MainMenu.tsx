@@ -152,10 +152,9 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
             the mysteries of quantum physics through immersive escape rooms that
             challenge your understanding of reality itself.
           </p>
-          <p className="text-sm text-cyan-300 italic mt-4 transition-opacity duration-500">
+         <p className="text-lg md:text-xl text-cyan-300 italic mt-6 font-semibold tracking-wide drop-shadow-[0_0_8px_#22d3ee]">
   {tips[currentTipIndex]}
 </p>
-
         </div>
 
         {/* Main Menu Buttons */}
