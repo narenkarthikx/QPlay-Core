@@ -77,7 +77,26 @@ const StateChambrer: React.FC = () => {
   const [displayValue, setDisplayValue] = useState(0);
 
   // Hidden target state (players need to reconstruct this)
-  const targetState: BlochVector = { x: 0.6, y: 0.8, z: 0.2 };
+  // const targetState: BlochVector = { x: 0.6, y: 0.8, z: 0.2 };
+
+  //  NEW: Generate a random, normalized Bloch vector for target state
+const getRandomTargetState = (): BlochVector => {
+  let x = Math.random() * 2 - 1;
+  let y = Math.random() * 2 - 1;
+  let z = Math.random() * 2 - 1;
+  const magnitude = Math.sqrt(x * x + y * y + z * z);
+  return { x: x / magnitude, y: y / magnitude, z: z / magnitude };
+};
+
+//  Use useState to initialize target only once per session
+const [targetState] = useState<BlochVector>(() => getRandomTargetState());
+
+//  Log target only during development
+useEffect(() => {
+  if (process.env.NODE_ENV === "development") {
+    console.log("🎯 Target State:", targetState);
+  }
+}, [targetState]);
 
   // Memoized debounce function to prevent recreation
   const stableDebounce = useCallback(
@@ -269,26 +288,33 @@ const StateChambrer: React.FC = () => {
     [isActive],
   );
 
-  const reconstructState = () => {
-    const reconstructed: BlochVector = {
-      x: measurements.x,
-      y: measurements.y,
-      z: measurements.z,
-    };
-
-    setReconstructedState(reconstructed);
-
-    // Check if reconstruction is close to target
-    const distance = Math.sqrt(
-      Math.pow(reconstructed.x - targetState.x, 2) +
-        Math.pow(reconstructed.y - targetState.y, 2) +
-        Math.pow(reconstructed.z - targetState.z, 2),
-    );
-
-    if (distance < 0.3) {
-      setShowDecoherence(true);
-    }
+const reconstructState = () => {
+  const reconstructed: BlochVector = {
+    x: measurements.x,
+    y: measurements.y,
+    z: measurements.z,
   };
+
+  setReconstructedState(reconstructed);
+
+  //  Calculate how close player is to the target
+  const distance = Math.sqrt(
+    Math.pow(reconstructed.x - targetState.x, 2) +
+      Math.pow(reconstructed.y - targetState.y, 2) +
+      Math.pow(reconstructed.z - targetState.z, 2),
+  );
+
+  //  Provide tiered feedback depending on how close they are
+  if (distance < 0.3) {
+    setShowDecoherence(true);
+  } else if (distance < 0.5) {
+    alert("✨ Almost there! Apply the noise filter to refine your guess.");
+  } else if (distance < 0.7) {
+    alert("⚠️ Not bad! You're getting closer.");
+  } else {
+    alert("❌ You're far off. Try more accurate measurements.");
+  }
+};
 
   const applyNoiseFilter = () => {
     setIsFilterApplying(true);
@@ -398,6 +424,15 @@ const StateChambrer: React.FC = () => {
     blochSphereLoaded,
     scriptsLoaded,
   ]);
+
+  useEffect(() => {
+  if (timeLeft === 0 && !roomCompleted) {
+    alert("⏰ Time’s up! The quantum state has decohered. Try again.");
+    setIsActive(false);
+    // Optionally: Lock controls or reset game here
+  }
+}, [timeLeft, roomCompleted]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 to-blue-900 p-6">
@@ -650,7 +685,7 @@ const StateChambrer: React.FC = () => {
                       {/* Animated Apply Filter Button */}
                       <button
                         onClick={applyNoiseFilter}
-                        disabled={isFilterApplying}
+                        disabled={isFilterApplying || timeLeft === 0}
                         className={`w-full px-4 py-3 rounded-xl font-semibold text-white
                                  transition-all duration-300 transform hover:scale-105
                                  active:scale-95 disabled:scale-100 disabled:opacity-70
@@ -708,11 +743,9 @@ const StateChambrer: React.FC = () => {
                       onClick={() =>
                         performMeasurement(axis as "x" | "y" | "z")
                       }
-                      disabled={
-                        measurementCount[
-                          axis as keyof typeof measurementCount
-                        ] >= 3
-                      }
+                     disabled={
+  measurementCount[axis as keyof typeof measurementCount] >= 3 || timeLeft === 0
+}
                       className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300
                                disabled:opacity-50 disabled:cursor-not-allowed ${
                                  axis === "x"
@@ -736,11 +769,11 @@ const StateChambrer: React.FC = () => {
                 </div>
               ))}
 
-              <button
-                onClick={reconstructState}
-                disabled={Object.values(measurementCount).some(
-                  (count) => count === 0,
-                )}
+            <button
+  onClick={reconstructState}
+  disabled={
+    Object.values(measurementCount).some((count) => count === 0) || timeLeft === 0
+  }
                 className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-violet-500
                          hover:from-purple-400 hover:to-violet-400 disabled:opacity-50
                          disabled:cursor-not-allowed rounded-xl font-semibold text-lg
